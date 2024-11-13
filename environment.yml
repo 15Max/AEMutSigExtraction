@@ -1,0 +1,12 @@
+name: DL
+channels:
+  - pytorch
+dependencies:
+  - python
+  - jupyter
+  - numpy  
+  - pandas
+  - matplotlib
+  - pytorch
+  - pip
+  - pip:
