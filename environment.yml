@@ -1,4 +1,4 @@
-name: DL
+name: DL_GENOMICS
 channels:
   - pytorch
 dependencies:
@@ -8,5 +8,6 @@ dependencies:
   - pandas
   - matplotlib
   - pytorch
+  - seaborn
   - pip
   - pip:
