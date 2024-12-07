@@ -1,12 +1,17 @@
 import torch
 import torch.nn.functional as F
 
+
+# Maybe we can enrich the class __init__ method with a docstring and with different
+# positivity constraints for the encoder and decoder weights.
+
 class AE_NMF(torch.nn.Module):
     """
     Autoencoder for Non-negative Matrix Factorization using Projected Gradient.
     """
     def __init__(self, input_dim, latent_dim):
         super().__init__()
+        # Maybe use Xavier initialization
         self.enc_weight = torch.nn.Parameter(torch.rand(input_dim, latent_dim))
         self.dec_weight = torch.nn.Parameter(torch.rand(latent_dim, input_dim))
 
