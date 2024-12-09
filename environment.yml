@@ -9,6 +9,8 @@ dependencies:
   - matplotlib
   - pytorch
   - seaborn
+  - pandas
   - pip
   - pip:
     - scikit-learn
+    - scipy
