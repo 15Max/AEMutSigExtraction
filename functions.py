@@ -4,12 +4,11 @@ import pandas as pd
 from scipy.optimize import linear_sum_assignment, nnls
 
 
-
 def signature_matching(estimated_signatures : np.ndarray, real_signatures: np.ndarray) -> tuple:
     '''
     This function calculates the similarity between the estimated and real signatures and uses it to 
-    match the sets of estimated and real signatures. This is achieved via the Hungarian algorithm 
-    which tries to maximize the similarity between the signatures.
+    match the sets of signatures. This is achieved via the Hungarian algorithm which tries to maximize the
+    similarity between the signatures.
     
     Parameters:
     estimated_signatures : np.ndarray, the estimated signature matrix. Each row corresponds to a signature.
@@ -53,8 +52,8 @@ def reconstruction_error(data : pd.DataFrame, signature_matrix : np.ndarray, mea
     # Solve Ax = b with non-negative least squares
     exposures = data.apply(lambda x: nnls(A = signature_matrix, b = x, maxiter = max_iterations)[0], axis = 0)
 
-    # Calculate the reconstruction error
-    reconstruction_error = np.linalg.norm(data.to_numpy() - np.dot(signature_matrix, exposures))
+     # Calculate the squared reconstruction error
+    reconstruction_error = np.linalg.norm(data.to_numpy() - np.dot(signature_matrix, exposures))**2
 
     if mean:
         reconstruction_error /= np.prod(data.shape)
@@ -102,3 +101,13 @@ if __name__ == "__main__":
 
     print("Optimal matching:", col_idx)
     print("Similarity matrix:", matrix)
+    
+    print("Real signature matrix:\n", real_signatures[1])
+    print("Estimated signature matrix:\n", estimated_signatures[6])
+    print("Another estimated signature matrix:\n", estimated_signatures[4])
+    i = 0
+    for matrix in estimated_signatures:
+        print("Index: ", i , "Difference: ", np.sum(real_signatures[1] - matrix))
+        i += 1
+
+
