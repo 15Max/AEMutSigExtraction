@@ -1,10 +1,14 @@
 ## Cose da fare
- - Finire di implementare il paper e fare refactoring (AE-NMF (M), NMF (A), C-NMF (A forse), cosine_sim (N), refit (N) etc...)
- - Testare se troviamo risultati consistenti con il paper (Avg train & test error)
- - Testare le signatures trovate con quelle trovare in cosmic (capire come fare)
+ - Relazione matematico PCA con shallow AE
+ - Testare le signatures trovate con quelle trovare in cosmic (capire come fare) (N)
  - Fare plot carini e varie robe 
+
+ - Denoising AE (A)
+ - Beta AE (M)
+ - Adattare AE complessi per GEL data (constraint valori positivi)
  - Testare autoencoder complessi 
 
+ - Fare notebook più puliti e ordinati tenendo conto di tutti i modelli
 ### Mini scaletta
  - Spiegazione del problema (mutational signatures e obiettivo)
  - C-NMF vs AE "semplice" confronto matematico
