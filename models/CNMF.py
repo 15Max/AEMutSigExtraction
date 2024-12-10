@@ -68,14 +68,14 @@ def convex_nmf(X, rank, init="random", tol=1e-3, max_iter=10e8):
     G, W = cvx_nmf_init(X, rank, init)
     XtX = X.T @ X
 
-    loss = [np.linalg.norm(X - X @ W @ G.T)**2]
+    loss = [np.linalg.norm(X - X @ W @ G.T)**2/(n*p)]
     rel_diff = float('inf')
     n_iter = 0
 
     while rel_diff > tol and n_iter < max_iter:
         n_iter += 1
         G, W = cvx_update(XtX, G, W)
-        current_loss = np.linalg.norm(X - X @ W @ G.T)**2
+        current_loss = np.linalg.norm(X - X @ W @ G.T)**2/(n*p)
         loss.append(current_loss)
         rel_diff = abs(loss[-1] - loss[-2]) / loss[-2]
 

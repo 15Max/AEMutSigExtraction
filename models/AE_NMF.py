@@ -17,11 +17,11 @@ class AE_NMF(torch.nn.Module):
         self.constraint = constraint
 
         # Use xavier initialization for the weights ?
-        self.enc_weight = torch.nn.Parameter(torch.nn.init.xavier_normal_(torch.empty(self.input_dim, self.latent_dim)))
-        self.dec_weight = torch.nn.Parameter(torch.nn.init.xavier_normal_(torch.empty(self.latent_dim, self.input_dim)))
+        #self.enc_weight = torch.nn.Parameter(torch.nn.init.xavier_normal_(torch.empty(self.input_dim, self.latent_dim)))
+        #self.dec_weight = torch.nn.Parameter(torch.nn.init.xavier_normal_(torch.empty(self.latent_dim, self.input_dim)))
 
-        #self.enc_weight = torch.nn.Parameter(torch.rand(input_dim, latent_dim))
-        #self.dec_weight = torch.nn.Parameter(torch.rand(latent_dim, input_dim))
+        self.enc_weight = torch.nn.Parameter(torch.rand(input_dim, latent_dim))
+        self.dec_weight = torch.nn.Parameter(torch.rand(latent_dim, input_dim))
 
     def forward(self, x):
         if self.constraint == 'pg':
@@ -30,9 +30,7 @@ class AE_NMF(torch.nn.Module):
         elif self.constraint == 'abs':
             x = torch.matmul(x, torch.abs(self.enc_weight))
             x = torch.matmul(x, torch.abs(self.dec_weight))
-        elif self.constraint == None:
-            x = torch.matmul(x, self.enc_weight)
-            x = torch.matmul(x, self.dec_weight)
+    
         return x
     
     

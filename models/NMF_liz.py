@@ -22,7 +22,7 @@ def NMF_mult(X, rank, tol=1e-3, max_iter=1e8, F_0=None, G_0=None):
     F = F_0 if F_0 is not None else np.random.rand(p, rank)
     G = G_0 if G_0 is not None else np.random.rand(rank, n)
 
-    loss = [np.linalg.norm(X - F @ G)**2]
+    loss = [np.linalg.norm(X - F @ G)**2/(n*p)]
     rel_diff = float('inf')
     n_iter = 0
 
@@ -34,10 +34,10 @@ def NMF_mult(X, rank, tol=1e-3, max_iter=1e8, F_0=None, G_0=None):
         F *= np.divide(X @ G.T, F @ G @ G.T, out=np.zeros_like(F), where=F @ G @ G.T != 0)
         
         # Compute loss
-        current_loss = np.linalg.norm(X - F @ G)**2
+        current_loss = np.linalg.norm(X - F @ G)**2/(n*p)
         loss.append(current_loss)
         
         # Compute relative difference
-        rel_diff = abs(loss[-1] - loss[-2]) / loss[-2]
+        rel_diff = abs(loss[-1] - loss[-2])/loss[-2]
 
     return F, G, loss, n_iter
