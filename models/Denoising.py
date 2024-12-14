@@ -46,19 +46,3 @@ class DenoisingAutoencoder(nn.Module):
     def get_decoder(self):
         # Returns the decoder model
         return self.decoder
-
-# Function to initialize and return the model
-def build_denoising_autoencoder(input_dim, latent_dim, regularization=1e-12):
-    """
-    Builds a denoising autoencoder model.
-
-    Args:
-        input_dim (int): Dimension of the input data.
-        latent_dim (int): Dimension of the latent space (encoding).
-        regularization (float): Regularization factor for the encoder layer.
-
-    Returns:
-        autoencoder (DenoisingAutoencoder): PyTorch autoencoder model.
-    """
-    model = DenoisingAutoencoder(input_dim, latent_dim, regularization)
-    return model

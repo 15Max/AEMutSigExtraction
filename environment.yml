@@ -10,6 +10,7 @@ dependencies:
   - pytorch
   - seaborn
   - pandas
+  - tqdm
   - pip
   - pip:
     - scikit-learn
