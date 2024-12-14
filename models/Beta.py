@@ -42,38 +42,6 @@ class BetaVAE(nn.Module):
         return recon_loss + self.beta * kl_divergence
 
 
-def train(model, training_data, epochs, optimizer, batch_size, device):
-    model.train()
-    all_signatures = []
-    all_exposures = []
-
-    for epoch in range(epochs):
-        train_loss = 0
-        signatures = []
-        exposures = []
-
-        for i in range(0, len(training_data), batch_size):
-            x = training_data[i:i + batch_size]
-            x = x.to(device)
-            optimizer.zero_grad()
-            recon_x, mu, logvar = model(x)
-            loss = model.loss_function(recon_x, x, mu, logvar)
-            loss.backward()
-            train_loss += loss.item()
-            optimizer.step()
-
-            # Collect signature and exposure matrices
-            signatures.append(mu.detach().cpu())  # Latent representations (signatures)
-            exposures.append(x.detach().cpu())    # Original data (exposures)
-
-        signatures = torch.cat(signatures, dim=0)
-        exposures = torch.cat(exposures, dim=0)
-
-        all_signatures.append(signatures)
-        all_exposures.append(exposures)
-
-        print(f"Epoch [{epoch + 1}/{epochs}], Loss: {train_loss / len(training_data):.4f}")
-
-    return torch.cat(all_signatures, dim=0), torch.cat(all_exposures, dim=0)
-
+def train(model, trainloader, optimizer, epochs):
+    pass
  
