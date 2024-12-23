@@ -1,5 +1,4 @@
 ## Cose da fare
- 
  - Relazione matematico PCA con shallow AE (preparare una mini spiegazione + ref material) $\checkmark$
  - Testare le signatures trovate con quelle trovate in cosmic (capire come fare)
  - Denoising AE (preparare una mini spiegazione + ref material) $\checkmark$
