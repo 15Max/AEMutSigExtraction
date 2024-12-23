@@ -5,7 +5,12 @@
 - Goal of the project
 -Index of contents with motivation for each section
 
+Mutational signatures are distinct patterns of mutations that result from specific biological processes or exposures. 
+When we refer to mutations we are talking about changes in the DNA sequence of a cell that can be caused by different factors, including environmental exposures, defective DNA repair mechanisms, endogenous (internal) processes or even inherited from our parents.
+Some of these mutations can be linked to the development of cancer. 
+This is why we are interested in identifyng common patterns of mutations that can help us understand the underlying factors that lead to cancer.
 
+Mutational signatues are 
 
 ## Data
 - Description of the data
