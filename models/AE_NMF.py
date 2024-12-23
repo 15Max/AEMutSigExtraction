@@ -14,7 +14,7 @@ class AE_NMF(torch.nn.Module):
         
         self.input_dim = input_dim
         self.latent_dim = latent_dim
-        self.constraint = constraint
+        self.constraint = constraint  # Guarantee that the weights are non-negative
 
         # Use xavier initialization for the weights ?
         #self.enc_weight = torch.nn.Parameter(torch.nn.init.xavier_normal_(torch.empty(self.input_dim, self.latent_dim)))
@@ -37,27 +37,29 @@ class AE_NMF(torch.nn.Module):
 def train(model, training_data, criterion, optimizer, tol = 1e-3, relative_tol = True, max_iter = 100_000_000):
     training_data_tensor = torch.tensor(training_data.values, dtype = torch.float32)
 
-    training_loss = [1e10]
-    relative_diff = float('inf')
+    training_loss = []
+    diff = float('inf')
 
-    iter = 0
-    while relative_diff > tol and iter < max_iter:
-        optimizer.zero_grad()
+    iters = 0
+    while diff > tol and iters < max_iter: # Convergence criterion
+        optimizer.zero_grad() # add batching 
         output = model(training_data_tensor)
         loss = criterion(output, training_data_tensor)
         loss.backward()
         optimizer.step()
 
         training_loss.append(loss.item())
-        
-        if relative_tol:
-            denominator = training_loss[-2]
-        else:
-            denominator = 1 
-        relative_diff = abs(training_loss[-1] - training_loss[-2])/denominator
+
+
+        if len(training_loss) > 1:
+            if relative_tol:
+                diff = abs(training_loss[-1] - training_loss[-2])/training_loss[-2]
+            else:
+                diff = abs(training_loss[-1] - training_loss[-2])
+
         
         # Go to next iteration
-        iter += 1
+        iters += 1
         
 
         with torch.no_grad():
@@ -69,7 +71,6 @@ def train(model, training_data, criterion, optimizer, tol = 1e-3, relative_tol =
                     param.abs_()
           
         
-    del training_loss[0]
 
     # Constraints on final signature and exposure matrices
     if model.constraint == 'pg':    
@@ -81,4 +82,4 @@ def train(model, training_data, criterion, optimizer, tol = 1e-3, relative_tol =
         sig_mat = (training_data @ enc_mat).to_numpy()
         exp_mat = (torch.abs(model.dec_weight).data).numpy()
 
-    return (model, training_loss, sig_mat, exp_mat, enc_mat, iter)
+    return model, training_loss, sig_mat, exp_mat, enc_mat, iter
