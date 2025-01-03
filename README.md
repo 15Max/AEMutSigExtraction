@@ -1,20 +1,14 @@
 # Autoencoders for mutational signatures extraction
 
 ## Introduction 
-- What are mutational signatures? (problem statement)
-- Goal of the project
--Index of contents with motivation for each section
-
-
-
 Mutational signatures are distinct patterns of mutations that result from specific biological processes or external environmental factors.
 
-When we refer to mutations, we mean changes in the DNA sequence of an allele—one of the two copies of a gene that we inherit from our parents.
+When we refer to mutations, we mean changes in the DNA sequence of an allel, one of the two copies of a gene that we inherit from our parents.
 
 When analyzing mutations in normal tissue, we compare them to the reference genome, which represents the most common sequence of the human genome. Mutations can be classified into two main categories:
 
 - **Germline mutations**: Inherited from our parents and present in every cell of the body.
-- **Somatic mutations**: Acquired during a person’s lifetime and not inherited.
+- **Somatic mutations**: Acquired during a person's lifetime and not inherited.
 Since cancer is driven by the accumulation of mutations, identifying common patterns across different patients is crucial for understanding tumor development.
 
 In mutational signature analysis, we specifically focus on somatic mutations, which arise during a patient’s lifetime rather than being inherited. These mutations can be caused by different factors, including environmental exposures, defective DNA repair mechanisms or endogenous (internal) processes.
@@ -36,21 +30,31 @@ Single base substitutions can be classified into six types, depending on the typ
 - T>A (thymine to adenine)
 - T>C (thymine to cytosine)
 - T>G (thymine to guanine)
+
 The context of a mutation is crucial, as the surrounding bases can influence the likelihood of a mutation occurring. 
-This results in 96 possible combinations (6 types of base substitutions x 4 possible bases before x 4 possible bases after the mutated base).
+This results in 96 possible combinations (6 types of base substitutions $\times$ 4 possible bases before $\times$ 4 possible bases after the mutated base).
 Thus, an SBS mutation is classified based on its specific trinucleotide context.
 
-...
+If we define a probability vector $p_i$, where each element represents the probability of observing mutation type $i$ in a given signature. The
+matrix $W$ contains these probabilities for each mutational signature, ensuring that the sum of the elements in each column is equal to 1.
 
+The following image shows an example of a mutational signature associated with U-V light mutational processes.
 
+<img src="images/MutSig.png" alt="NMF" width="700"/>
 
+A catalog of known mutational sginatures can be found in the [COSMIC database](https://cancer.sanger.ac.uk/signatures), which is used as a reference for comparing and identifying new signatures.
+## Project overview TODO:check this part
+Signatures can be represented as a matrix factorization problem, where the data matrix, consisting of non-negative counts of mutations in each trinucleotide context, is factorized into two non-negative matrices: the signature matrix and the exposure matrix. 
+Throught this project we want to extract these two lower rank matrices, with a special focus on autoencoders.
 
+TODO: fix this part when we have decided on dataset
 
-Mutational signatures are typically represented as a matrix, where each row corresponds to a specific type of mutation and each column represents a specific type of base substitution. The values in the matrix indicate the frequency of each mutation type in the dataset.
+The data we used is....
 
-### Project overview
-
-
+Firstly, as a benchmark, we used NMF and convex-NMF to extract the signature and exposure  matrices, these are the most common methods used for this task. 
+Then, we explored the use of autoencoders, starting with a shallow autoencoder, that is equivalent to PCA, an then moving on to a shallow denoising sparse autoencoder with the aim to explore the effects of noise and sparsity in the extraction of mutational signatures. 
+Finally, we implemented a more complex autoencoder, MUSE-XAE, which incorporates bootstrapping, Poisson likelihood in the loss function, early stopping, and k-means to extract the best decoder weights. 
+The results should provide insights into the performance of autoencoders compared to the classical NMF methods, and potentially identify non-linear relationships between the data that are not captured by NMF.
 ## Data (M)
 - Description of the data
   - GEL / Qualcosa di diverso
@@ -96,7 +100,7 @@ In our case, we decided to add random Gaussian noise to the input count matrices
 Sparse autoencoders are designed to learn a sparse representation of the input data. This means the model is encouraged to use only a small number of neurons in the hidden layer, leading to a more compact and efficient representation. This helps reduce overfitting and enhances generalization.
 To enforce sparsity, we incorporated L1 regularization in the loss function, which penalizes large activations in the hidden layer.
 
-TODO: add wgat we did in the project
+TODO: add what we did in the project
 
 ## [MUSE-XAE](references/MUSE-XAE.pdf) (N)
 
