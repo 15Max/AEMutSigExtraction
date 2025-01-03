@@ -47,9 +47,13 @@ input matrix, making NMF a dimensionality reduction technique.
 ### Mathematical relationship between PCA and AE-NMF
 
 ## [Denoising Sparse Autoencoder](references/Denoising.pdf) (M)
-
-### Denoising technique
-### Sparse technique
+Denoising sparse autoencoders are a combination of two techniques: denoising autoencoders and sparse autoencoders.
+### Denoising autoencoders
+Denoising autoencoders are trained to reconstruct the original input from a corrupted version of it. This is done by adding noise to the input data and training the model to recover the original data. The idea behind this technique is to make the autoencoder more robust to noise and improve its generalization capabilities.
+In our case, we decided to add random Gaussian noise to the input count matrices before the training procedure.
+### Sparse autoencoder
+Sparse autoencoders are designed to learn a sparse representation of the input data. This means the model is encouraged to use only a small number of neurons in the hidden layer, leading to a more compact and efficient representation. This helps reduce overfitting and enhances generalization.
+To enforce sparsity, we incorporated L1 regularization in the loss function, which penalizes large activations in the hidden layer.
 
 ## [MUSE-XAE](references/MUSE-XAE.pdf) (N)
 
