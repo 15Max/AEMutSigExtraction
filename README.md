@@ -1,16 +1,55 @@
 # Autoencoders for mutational signatures extraction
 
-## Introduction (M)
+## Introduction 
 - What are mutational signatures? (problem statement)
 - Goal of the project
 -Index of contents with motivation for each section
 
-Mutational signatures are distinct patterns of mutations that result from specific biological processes or external environmental factors. 
-When we refer to mutations we are talking about changes in the DNA sequence of a cell that can be caused by different factors, including environmental exposures, defective DNA repair mechanisms, endogenous (internal) processes or even inherited from our parents.
-Some of these mutations can be linked to the development of cancer. 
-This is why we are interested in identifyng common patterns of mutations that can help us understand the underlying factors that lead to cancer.
 
-Mutational signatues are 
+
+Mutational signatures are distinct patterns of mutations that result from specific biological processes or external environmental factors.
+
+When we refer to mutations, we mean changes in the DNA sequence of an allele—one of the two copies of a gene that we inherit from our parents.
+
+When analyzing mutations in normal tissue, we compare them to the reference genome, which represents the most common sequence of the human genome. Mutations can be classified into two main categories:
+
+- **Germline mutations**: Inherited from our parents and present in every cell of the body.
+- **Somatic mutations**: Acquired during a person’s lifetime and not inherited.
+Since cancer is driven by the accumulation of mutations, identifying common patterns across different patients is crucial for understanding tumor development.
+
+In mutational signature analysis, we specifically focus on somatic mutations, which arise during a patient’s lifetime rather than being inherited. These mutations can be caused by different factors, including environmental exposures, defective DNA repair mechanisms or endogenous (internal) processes.
+
+Mutational processes can be broadly classified into two categories:
+- **Endogenous mutational processes** (e.g. DNA replication errors, defective DNA repair mechanisms)
+- **Exogenous mutational processes** (e.g. exposure to ultraviolet light, tobacco smoke)
+
+Understanding mutational signatures is particularly useful for devising personalized patient treatment, as different mutations are linked to specific causes of tumorigenesis. 
+### Mutational contexts
+In this project we'll focus on the analysis of single base substitutions (SBS), which involve the mutation of a single nucleotide in the DNA sequence within a specific context. The context refers to the bases immediately before and after the mutated base. 
+
+If two consecutive bases are mutated, we refer to them as double base substitutions (DBSs). Other types of mutations, such as insertions and deletions (indels), exist but will not be considered in this project.
+
+Single base substitutions can be classified into six types, depending on the type of base substitution:
+- C>A (cytosine to adenine)
+- C>G (cytosine to guanine)
+- C>T (cytosine to thymine)
+- T>A (thymine to adenine)
+- T>C (thymine to cytosine)
+- T>G (thymine to guanine)
+The context of a mutation is crucial, as the surrounding bases can influence the likelihood of a mutation occurring. 
+This results in 96 possible combinations (6 types of base substitutions x 4 possible bases before x 4 possible bases after the mutated base).
+Thus, an SBS mutation is classified based on its specific trinucleotide context.
+
+...
+
+
+
+
+
+Mutational signatures are typically represented as a matrix, where each row corresponds to a specific type of mutation and each column represents a specific type of base substitution. The values in the matrix indicate the frequency of each mutation type in the dataset.
+
+### Project overview
+
 
 ## Data (M)
 - Description of the data
@@ -47,6 +86,8 @@ input matrix, making NMF a dimensionality reduction technique.
 ### Mathematical relationship between PCA and AE-NMF
 
 ## [Denoising Sparse Autoencoder](references/Denoising.pdf) (M)
+- TODO: Add a bit more mathematical notation, after we decide what to use, to avoid inconsistencies
+
 Denoising sparse autoencoders are a combination of two techniques: denoising autoencoders and sparse autoencoders.
 ### Denoising autoencoders
 Denoising autoencoders are trained to reconstruct the original input from a corrupted version of it. This is done by adding noise to the input data and training the model to recover the original data. The idea behind this technique is to make the autoencoder more robust to noise and improve its generalization capabilities.
@@ -54,6 +95,8 @@ In our case, we decided to add random Gaussian noise to the input count matrices
 ### Sparse autoencoder
 Sparse autoencoders are designed to learn a sparse representation of the input data. This means the model is encouraged to use only a small number of neurons in the hidden layer, leading to a more compact and efficient representation. This helps reduce overfitting and enhances generalization.
 To enforce sparsity, we incorporated L1 regularization in the loss function, which penalizes large activations in the hidden layer.
+
+TODO: add wgat we did in the project
 
 ## [MUSE-XAE](references/MUSE-XAE.pdf) (N)
 
