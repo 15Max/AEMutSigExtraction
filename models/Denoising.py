@@ -4,7 +4,7 @@ import torch.nn.functional as F
 # import torch.optim as optim
 
 class DenoisingAutoencoder(nn.Module):
-    def __init__(self, input_dim, latent_dim, regularization=1e-12):
+    def __init__(self, input_dim, latent_dim, regularization=1e-12, count = True):
         """
         Initializes the denoising autoencoder.
         
@@ -27,18 +27,23 @@ class DenoisingAutoencoder(nn.Module):
         )
 
         # Decoder
-        self.decoder = nn.Sequential(
-            nn.Linear(latent_dim, input_dim),
-            nn.Softmax(dim=-1) # dim=1
-        )
+        if count:
+            self.decoder = nn.Sequential(
+                nn.Linear(latent_dim, input_dim),
+                nn.ReLU()
+            )
+        else:
+            self.decoder = nn.Sequential(
+                nn.Linear(latent_dim, input_dim),
+
+                nn.Softmax(dim=-1) # dim=1
+            )
 
     def forward(self, x):
-        # Encode
-        encoded = self.encoder(x)
+        x = self.encoder(x)  # Encode
+        x = self.decoder(x)  # Decode
+        return x
 
-        # Decode
-        decoded = self.decoder(encoded)
-        return decoded
 
     def get_encoder(self):
         # Returns the encoder model
@@ -68,7 +73,7 @@ def add_noise_freq(data_tensor, noise_factor=0.5):
     noisy_data = torch.clamp(noisy_data, 0., 1.)
     return noisy_data
 
-def add_noise_count(data_tensor, noise_factor=0.1): # maybe pass sigma directly
+def add_noise_count(data_tensor, sigma = 10): # maybe pass sigma directly
     """
     Adds random gaussian noise to the input data.
     
@@ -79,13 +84,13 @@ def add_noise_count(data_tensor, noise_factor=0.1): # maybe pass sigma directly
     Returns:
         torch.Tensor: Noisy data.
     """
-    sigma = noise_factor * torch.mean(data_tensor) # Is this a good choice for sigma?
+    #sigma = noise_factor * torch.mean(data_tensor) # Is this a good choice for sigma?
     noise = sigma * torch.randn_like(data_tensor)
     noisy_data = data_tensor + noise
     noisy_data = torch.clamp(noisy_data, min= 0).int() # We need non-negative integers
     return noisy_data
     
 
-    def train():
-        pass
+def train():
+    pass
 
