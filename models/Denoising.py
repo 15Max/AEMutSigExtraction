@@ -15,15 +15,16 @@ class DenoisingAutoencoder(nn.Module):
         """
         super(DenoisingAutoencoder, self).__init__()
         
+        
+        self.l1_regularization = regularization
+        self.input_dim = input_dim
+        self.latent_dim = latent_dim
+
         # Encoder
         self.encoder = nn.Sequential(
             nn.Linear(input_dim, latent_dim),
-            nn.ReLU()
-            # nn.Dropout(regularization)  # Add regularization-like effect, it could be used instead of L1 regularization
+            nn.ReLU() #Should we keep the ReLU? or should this be the identity function?
         )
-
-        # Regularization (L1)
-        self.l1_regularization = regularization
 
         # Decoder
         self.decoder = nn.Sequential(
@@ -46,3 +47,45 @@ class DenoisingAutoencoder(nn.Module):
     def get_decoder(self):
         # Returns the decoder model
         return self.decoder
+    
+
+
+# This noise function is now adapted to frequency usage
+# We are going to use count data
+def add_noise_freq(data_tensor, noise_factor=0.5):
+    """
+    Adds random gaussian noise to the input data.
+    
+    Args:
+        data (torch.Tensor): Input data.
+        noise_factor (float): Noise factor.
+    
+    Returns:
+        torch.Tensor: Noisy data.
+    """
+    noise = noise_factor * torch.randn_like(data_tensor)
+    noisy_data = data_tensor + noise
+    noisy_data = torch.clamp(noisy_data, 0., 1.)
+    return noisy_data
+
+def add_noise_count(data_tensor, noise_factor=0.1): # maybe pass sigma directly
+    """
+    Adds random gaussian noise to the input data.
+    
+    Args:
+        data (torch.Tensor): Input data.
+        noise_factor (float): Noise factor.
+    
+    Returns:
+        torch.Tensor: Noisy data.
+    """
+    sigma = noise_factor * torch.mean(data_tensor) # Is this a good choice for sigma?
+    noise = sigma * torch.randn_like(data_tensor)
+    noisy_data = data_tensor + noise
+    noisy_data = torch.clamp(noisy_data, min= 0).int() # We need non-negative integers
+    return noisy_data
+    
+
+    def train():
+        pass
+

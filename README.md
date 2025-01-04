@@ -47,12 +47,16 @@ A catalog of known mutational sginatures can be found in the [COSMIC database](h
 Signatures can be represented as a matrix factorization problem, where the data matrix, consisting of non-negative counts of mutations in each trinucleotide context, is factorized into two non-negative matrices: the signature matrix and the exposure matrix. 
 Throught this project we want to extract these two lower rank matrices, with a special focus on autoencoders.
 
-TODO: fix this part when we have decided on dataset
+TODO: fix this part when we have decided on dataset/data augmetation/synthetic data
 
 The data we used is....
 
 Firstly, as a benchmark, we used NMF and convex-NMF to extract the signature and exposure  matrices, these are the most common methods used for this task. 
-Then, we explored the use of autoencoders, starting with a shallow autoencoder, that is equivalent to PCA, an then moving on to a shallow denoising sparse autoencoder with the aim to explore the effects of noise and sparsity in the extraction of mutational signatures. 
+Then, we explored the use of autoencoders, starting with a shallow autoencoder with non-negativity constraints.
+Since the activation function is identity, this autoencoder is equivalent to PCA.
+We also imìnvestigated the use of a shallow denoising sparse autoencoder,with non-negativity constraints to ensure the extracted weigths were coherent with the problem at hand. This model should be more robust to noise and overfitting, and provide a more sparse representation of the data.
+
+#TODO : check this part, fix it when decided what to do
 Finally, we implemented a more complex autoencoder, MUSE-XAE, which incorporates bootstrapping, Poisson likelihood in the loss function, early stopping, and k-means to extract the best decoder weights. 
 The results should provide insights into the performance of autoencoders compared to the classical NMF methods, and potentially identify non-linear relationships between the data that are not captured by NMF.
 ## Data (M)
