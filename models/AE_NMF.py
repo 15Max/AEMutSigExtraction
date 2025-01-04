@@ -9,19 +9,20 @@ class AE_NMF(torch.nn.Module):
     - Projected Gradient (pg) 
     - Absolute Values (abs)
     """
-    def __init__(self, input_dim, latent_dim, constraint = 'pg'):
+    def __init__(self, input_dim, latent_dim, constraint = 'pg', xavier = False):
         super().__init__()
         
         self.input_dim = input_dim
         self.latent_dim = latent_dim
         self.constraint = constraint  # Guarantee that the weights are non-negative
 
-        # Use xavier initialization for the weights ?
-        #self.enc_weight = torch.nn.Parameter(torch.nn.init.xavier_normal_(torch.empty(self.input_dim, self.latent_dim)))
-        #self.dec_weight = torch.nn.Parameter(torch.nn.init.xavier_normal_(torch.empty(self.latent_dim, self.input_dim)))
+        if xavier:
+            self.enc_weight = torch.nn.Parameter(torch.nn.init.xavier_normal_(torch.empty(self.input_dim, self.latent_dim)))
+            self.dec_weight = torch.nn.Parameter(torch.nn.init.xavier_normal_(torch.empty(self.latent_dim, self.input_dim)))
+        else:
 
-        self.enc_weight = torch.nn.Parameter(torch.rand(input_dim, latent_dim))
-        self.dec_weight = torch.nn.Parameter(torch.rand(latent_dim, input_dim))
+            self.enc_weight = torch.nn.Parameter(torch.rand(input_dim, latent_dim))
+            self.dec_weight = torch.nn.Parameter(torch.rand(latent_dim, input_dim))
 
     def forward(self, x):
         if self.constraint == 'pg':
