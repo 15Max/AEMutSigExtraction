@@ -1,6 +1,12 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import numpy as np
+import pandas as pd
+from sklearn.metrics.pairwise import cosine_distances
+from scipy.optimize import linear_sum_assignment  # Faster LAP solver
+from sklearn.cluster import KMeans
+
 
 
 def OrthogonalRegularizer(beta, W):
@@ -55,7 +61,7 @@ class Encoder(nn.Module):
             nn.Softplus()                   # activation
         )
 
-        # Adding the last layer separately to access its weights easily
+        # Adding the last layer (latent) separately to access its weights easily
         if refit:
             self.last_layer = nn.Linear(l_1 // 4, k)  # Latent layer
             self.activation_fn = nn.ReLU()
@@ -126,7 +132,63 @@ class HybridAutoencoder(nn.Module):
         return reconstruction, exposures, total_loss
 
 
+class KMeans_with_matching:
+    def __init__(self, X, n_clusters, max_iter=100):
+        """
+        Optimized KMeans with Hungarian Matching.
 
+        Parameters:
+        - X (numpy array): Data points.
+        - n_clusters (int): Number of clusters.
+        - max_iter (int): Maximum number of iterations.
+        """
+        self.X = X
+        self.n_clusters = n_clusters
+        self.max_iter = max_iter
+        self.n = X.shape[0]
 
-        
+        # Step 1: Initialize Clusters Using KMeans++
+        if self.n_clusters > 1:
+            model = KMeans(n_clusters=n_clusters, init='k-means++', n_init=10).fit(self.X)
+            self.C = model.cluster_centers_
+        else:
+            self.C = self.X[np.random.choice(self.n, size=1), :]
+
+        self.C_prev = np.copy(self.C)
+        self.C_history = [np.copy(self.C)]    
+
+    def fit_predict(self):
+        """Runs the optimized KMeans + Hungarian Matching Algorithm."""
+
+        if self.n_clusters == 1:
+            # If only one cluster, assign everything to it
+            cost = cosine_distances(self.X, self.C)  # Compute cosine distance
+            row_ind, colsol = linear_sum_assignment(cost)  # Optimal matching
+            self.partition = np.zeros(self.n)  # Assign all to cluster 0
+            self.C[0, :] = np.mean(self.X, axis=0)  # Update cluster center
+            return pd.DataFrame(self.C).T, self.partition
+
+        for k_iter in range(self.max_iter):
+            # Step 1: Compute (n, k) cosine distance matrix (faster)
+            cost = cosine_distances(self.X, self.C)
+
+            # Step 2: Solve the Hungarian assignment problem
+            row_ind, colsol = linear_sum_assignment(cost)
+            self.partition = colsol  # Store cluster assignments
+
+            # Step 3: Update cluster centers
+            for i in range(self.n_clusters):
+                assigned_points = self.X[self.partition == i]
+                if len(assigned_points) > 0:
+                    self.C[i, :] = np.mean(assigned_points, axis=0)
+
+            self.C_history.append(np.copy(self.C))
+
+            # Step 4: Early stopping if cluster centers do not change
+            if np.allclose(self.C, self.C_prev, atol=1e-6):
+                break
+            self.C_prev = np.copy(self.C)
+
+        return pd.DataFrame(self.C).T, self.partition
+
     
