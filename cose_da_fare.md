@@ -1,8 +1,8 @@
 ## Cose da fare
  - Relazione matematico PCA con shallow AE (preparare una mini spiegazione + ref material) $\checkmark$
- - Testare le signatures trovate con quelle trovate in cosmic (capire come fare)
+ - Testare le signatures trovate con quelle trovate in cosmic (da fare)
  - Denoising AE (preparare una mini spiegazione + ref material) $\checkmark$
- - Adattare AE complessi (MUSE like) per GEL data
+ - Trainare AE complessi (MUSE) per GEL data 
  - Fare notebook più puliti e ordinati tenendo conto di tutti i modelli (to be done)
 
 ## Scaletta

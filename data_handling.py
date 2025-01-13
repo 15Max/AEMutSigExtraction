@@ -19,20 +19,17 @@ def data_augmentation(X : pd.DataFrame , augmentation : int =5) -> pd.DataFrame:
         X_bootstrapped=[]
         for col in X.columns:
             N = int(round(np.sum(X[col])))
-            p = X[col] / (N + 1e-9) 
+            p = X[col] / N 
             X_bootstrapped.append(np.random.multinomial(N, p))
+
         X_bootstrapped = np.transpose(np.array(X_bootstrapped))
 
         # Make sure that the columns have original names: original name + _augmented + i
 
         X_bootstrapped = pd.DataFrame(X_bootstrapped, columns=[str(col) + '_aug_' + str(i) for col in X.columns])
-        X_augmented.append(pd.DataFrame(X_bootstrapped))
+        X_augmented.append(pd.DataFrame(X_bootstrapped, dtype= 'int64'))
 
-    X_aug=pd.concat(X_augmented,axis=0)
-
-    X_aug = pd.concat([pd.DataFrame(X)] * augmentation + X_augmented, axis=1)
-
-    
+    X_aug = pd.concat(X_augmented, axis=1)
 
     return X_aug
 
