@@ -1,5 +1,4 @@
 # Ignore .csv .pkl and Zone.Identifier files
-*.csv
 *.pkl 
 *.csv:Zone.Identifier
 *.tsv:Zone.Identifier
