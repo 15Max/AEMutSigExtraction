@@ -5,13 +5,14 @@ import pandas as pd
 from scipy.optimize import linear_sum_assignment
 from sklearn.metrics.pairwise import cosine_similarity
 
+
 def compute_match(Signatures : pd.DataFrame, Signatures_true : pd.DataFrame) -> pd.DataFrame:
     """
     Compute the cosine similarity between the extracted signatures and the true signatures and return a dataframe with the similarity values.
 
     Parameters:
     Signatures (pd.DataFrame): Extracted signatures of shape 96 x k
-    Signatures_true (pd.DataFrame): True signatures of shape 96 x k
+    Signatures_true (pd.DataFrame): True signatures
 
     Returns:
     match_df (pd.DataFrame): Dataframe with columns 'Extracted', 'True', and 'Similarity' showing the similarity values between the extracted and true signatures.
@@ -25,13 +26,17 @@ def compute_match(Signatures : pd.DataFrame, Signatures_true : pd.DataFrame) -> 
         Signatures_true = pd.DataFrame(Signatures_true)
 
     
-    # Since the matrices are 96 x k, we need to transpose them to k x 96
     cost = cosine_similarity(Signatures.T, Signatures_true.T)
 
-    row_ind, col_ind = linear_sum_assignment(cost)
+    print(cost)
 
-    Signatures_sorted = Signatures.iloc[:, col_ind]
-    Signatures_true_sorted = Signatures_true.iloc[:, row_ind]
+    row_ind, col_ind = linear_sum_assignment(1 - cost)
+
+    print(row_ind)
+    print(col_ind)
+
+    Signatures_sorted = Signatures.iloc[:, row_ind]
+    Signatures_true_sorted = Signatures_true.iloc[:, col_ind]
 
     simils = np.diag(cosine_similarity(Signatures_sorted.T, Signatures_true_sorted.T))
 

@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from sklearn.decomposition import NMF as nmf_sklearn
 import os
 
-def NMF(catalog_matrix, num_sign, tol = 1e-6, max_iter = 10e8):
+def nmf(catalog_matrix, num_sign, tol = 1e-6, max_iter = 10e8):
     """
     Performs Non-negative Matrix Factorization with a given tolerance level.
 
@@ -144,6 +144,8 @@ def NMF_mult_tol(X, rank, tol = 1e-6, relative_tol = True, mse = False, max_iter
 
     
     p,n = X.shape
+
+
     if F_0 is None:
        F_0 = np.random.rand(p, rank)
     if G_0 is None:  
@@ -164,7 +166,7 @@ def NMF_mult_tol(X, rank, tol = 1e-6, relative_tol = True, mse = False, max_iter
         G = G*(np.divide(F.T@X, F.T@F@G))
         F = F*(np.divide(X@(G.T), F@G@(G.T)))
         
-        frob_norm =  np.linalg.norm(X - F@G)
+        frob_norm =  np.linalg.norm(X - F@G)**2
         loss_val = frob_norm/(n*p) if mse else frob_norm
         loss.append(loss_val)
         denominator = loss[-2] if relative_tol else 1
