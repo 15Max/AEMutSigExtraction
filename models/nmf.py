@@ -54,7 +54,6 @@ def nmf(catalog_matrix, num_sign, tol = 1e-6, max_iter = 10e8):
         diff = abs(losses[-1] - losses[-2])
         
 
-        # # Add a print statement to see the progress
         # if n_iter%100 == 0:
         #     print(f"Iteration: {n_iter}, Loss: {losses[-1]}")
 
