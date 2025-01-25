@@ -25,7 +25,7 @@ import pandas as pd
 
 
 
-def load_preprocess_data(data_path, cosmic_data_path, sep1, sep2, output_folder, output_filename):    
+def load_preprocess_data(data_path, cosmic_data_path, sep1, sep2, output_folder, output_filename, out_cosmic_filename):    
     
     if not os.path.exists(os.path.join(output_folder, output_filename)):
         if not os.path.exists(output_folder):
@@ -48,9 +48,9 @@ def load_preprocess_data(data_path, cosmic_data_path, sep1, sep2, output_folder,
         data_aligned.to_csv(os.path.join(output_folder, output_filename))
         print("Data saved to", os.path.join(output_folder, output_filename))
 
-        if not os.path.exists(os.path.join(output_folder, "ordered_cosmic_data.csv")):
-            cosmic_aligned.to_csv(os.path.join(output_folder, "ordered_cosmic_data.csv"))
-            print("COSMIC data saved to", os.path.join(output_folder, "ordered_cosmic_data.csv"))
+        if not os.path.exists(os.path.join(output_folder, out_cosmic_filename)):
+            cosmic_aligned.to_csv(os.path.join(output_folder, out_cosmic_filename))
+            print("COSMIC data saved to", os.path.join(output_folder, out_cosmic_filename))
 
         print("Data loaded and aligned successfully!")
         
