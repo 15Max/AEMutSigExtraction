@@ -28,15 +28,17 @@ def compute_match(Signatures : pd.DataFrame, Signatures_true : pd.DataFrame) -> 
     
     cost = cosine_similarity(Signatures.T, Signatures_true.T)
 
-    print(cost)
 
     row_ind, col_ind = linear_sum_assignment(1 - cost)
 
-    print(row_ind)
-    print(col_ind)
 
     Signatures_sorted = Signatures.iloc[:, row_ind]
     Signatures_true_sorted = Signatures_true.iloc[:, col_ind]
+
+    print(Signatures_sorted)
+    print(Signatures_true_sorted)
+    print("Shape of signatures_sorted: ", Signatures_sorted.shape)
+    print("Shape of signatures_true_sorted: ",Signatures_true_sorted.shape)
 
     simils = np.diag(cosine_similarity(Signatures_sorted.T, Signatures_true_sorted.T))
 
