@@ -40,10 +40,6 @@ def train_aenmf(model, training_data, criterion, optimizer, tol = 1e-3, relative
     training_loss = []
     diff = float('inf')
 
-    weights = []
-    weights_before = []
-
-
     iters = 0
     while diff > tol and iters < max_iter: # Convergence criterion
         optimizer.zero_grad() 
