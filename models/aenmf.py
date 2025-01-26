@@ -1,6 +1,13 @@
 import torch
 import torch.nn.functional as F
+import torch.nn as nn
 
+
+# Custom Abs module to wrap torch.abs for use in nn.Sequential
+class Abs(nn.Module):
+    def forward(self, x):
+        return torch.abs(x)
+    
 
 class aenmf(torch.nn.Module):
     """
@@ -15,26 +22,44 @@ class aenmf(torch.nn.Module):
         self.input_dim = input_dim
         self.latent_dim = latent_dim
         self.constraint = constraint  # Guarantee that the weights are non-negative
+        self.xavier = xavier
 
-        if xavier:
-            self.enc_weight = torch.nn.Parameter(torch.nn.init.xavier_normal_(torch.empty(self.input_dim, self.latent_dim)))
-            self.dec_weight = torch.nn.Parameter(torch.nn.init.xavier_normal_(torch.empty(self.latent_dim, self.input_dim)))
+
+        if self.constraint == 'pg':
+            self.activation = nn.ReLU()
+        elif self.constraint == 'abs':
+            self.activation = Abs()
         else:
-            self.enc_weight = torch.nn.Parameter(torch.rand(input_dim, latent_dim))
-            self.dec_weight = torch.nn.Parameter(torch.rand(latent_dim, input_dim))
+            raise ValueError('Constraint not recognized. Choose between pg and abs')
+
+
+        self.encoder = nn.Sequential(
+            nn.Linear(self.input_dim, self.latent_dim),
+            self.activation
+        )
+
+        self.decoder = nn.Sequential(
+            nn.Linear(self.latent_dim, self.input_dim),
+            self.activation
+        )
+
+        # Xavier initialization
+        if self.xavier:
+            for module in self.modules():
+                if isinstance(module, nn.Linear):
+                    nn.init.xavier_normal_(module.weight)
+
 
     def forward(self, x):
-        if self.constraint == 'pg':
-            x = torch.matmul(x, F.relu(self.enc_weight))
-            x = torch.matmul(x, F.relu(self.dec_weight))
-        elif self.constraint == 'abs':
-            x = torch.matmul(x, torch.abs(self.enc_weight))
-            x = torch.matmul(x, torch.abs(self.dec_weight))
+
+        x = self.encoder(x)
+        x = self.decoder(x)
     
         return x
     
     
 def train_aenmf(model, training_data, criterion, optimizer, tol = 1e-3, relative_tol = True, max_iter = 100_000_000):
+
     training_data_tensor = torch.tensor(training_data.values, dtype = torch.float32)
 
     training_loss = []
@@ -62,8 +87,14 @@ def train_aenmf(model, training_data, criterion, optimizer, tol = 1e-3, relative
         iters += 1
     
 
-    signature = training_data @ model.enc_weight.data
-    exposure = model.dec_weight.data
+    # Get the encoder and decoder weights
+
+    enc_weights = model.encoder[0].weight.data.T
+    dec_weights = model.decoder[0].weight.data.T
+
+
+    signature = training_data @ enc_weights
+    exposure = dec_weights 
 
 
 
