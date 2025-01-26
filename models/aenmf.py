@@ -40,6 +40,10 @@ def train_aenmf(model, training_data, criterion, optimizer, tol = 1e-3, relative
     training_loss = []
     diff = float('inf')
 
+    weights = []
+    weights_before = []
+
+
     iters = 0
     while diff > tol and iters < max_iter: # Convergence criterion
         optimizer.zero_grad() 
@@ -60,34 +64,14 @@ def train_aenmf(model, training_data, criterion, optimizer, tol = 1e-3, relative
         
         # Go to next iteration
         iters += 1
-        
+    
 
-        with torch.no_grad():
-            if model.constraint == 'pg':
-                for param in model.parameters():
-                    param.clamp_(min=0)
-            elif model.constraint == 'abs':
-                for param in model.parameters():
-                    param.abs_()
-          
-        
-
-    # Constraints on final signature and exposure matrices
-    if model.constraint == 'pg':    
-        enc_mat = (model.enc_weight.data).numpy().clip(min=0)
-        sig_mat = (training_data @ enc_mat).to_numpy()
-        exp_mat = (model.dec_weight.data).numpy().clip(min=0)
-    elif model.constraint == 'abs':
-        enc_mat = torch.abs(model.enc_weight).data
-        sig_mat = (training_data @ enc_mat).to_numpy()
-        exp_mat = (torch.abs(model.dec_weight).data).numpy()
-
-    sig_extracted_from_nn = training_data @ model.enc_weight.data 
-    exp_extracted_from_nn = model.dec_weight.data
+    signature = training_data @ model.enc_weight.data
+    exposure = model.dec_weight.data
 
 
-    return model, training_loss, sig_mat, exp_mat, enc_mat, sig_extracted_from_nn, exp_extracted_from_nn
 
-#todo : check if the constraints are redudndant or not
+    return model, training_loss, signature, exposure
+
 
 # todo: give a more general check to the function
