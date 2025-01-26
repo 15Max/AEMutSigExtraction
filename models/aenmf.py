@@ -20,7 +20,6 @@ class aenmf(torch.nn.Module):
             self.enc_weight = torch.nn.Parameter(torch.nn.init.xavier_normal_(torch.empty(self.input_dim, self.latent_dim)))
             self.dec_weight = torch.nn.Parameter(torch.nn.init.xavier_normal_(torch.empty(self.latent_dim, self.input_dim)))
         else:
-
             self.enc_weight = torch.nn.Parameter(torch.rand(input_dim, latent_dim))
             self.dec_weight = torch.nn.Parameter(torch.rand(latent_dim, input_dim))
 
@@ -35,7 +34,7 @@ class aenmf(torch.nn.Module):
         return x
     
     
-def train(model, training_data, criterion, optimizer, tol = 1e-3, relative_tol = True, max_iter = 100_000_000):
+def train_aenmf(model, training_data, criterion, optimizer, tol = 1e-3, relative_tol = True, max_iter = 100_000_000):
     training_data_tensor = torch.tensor(training_data.values, dtype = torch.float32)
 
     training_loss = []
@@ -43,7 +42,7 @@ def train(model, training_data, criterion, optimizer, tol = 1e-3, relative_tol =
 
     iters = 0
     while diff > tol and iters < max_iter: # Convergence criterion
-        optimizer.zero_grad() # add batching 
+        optimizer.zero_grad() 
         output = model(training_data_tensor)
         loss = criterion(output, training_data_tensor)
         loss.backward()
@@ -83,7 +82,11 @@ def train(model, training_data, criterion, optimizer, tol = 1e-3, relative_tol =
         sig_mat = (training_data @ enc_mat).to_numpy()
         exp_mat = (torch.abs(model.dec_weight).data).numpy()
 
-    return model, training_loss, sig_mat, exp_mat, enc_mat
+    sig_extracted_from_nn = training_data @ model.enc_weight.data 
+    exp_extracted_from_nn = model.dec_weight.data
+
+
+    return model, training_loss, sig_mat, exp_mat, enc_mat, sig_extracted_from_nn, exp_extracted_from_nn
 
 #todo : check if the constraints are redudndant or not
 

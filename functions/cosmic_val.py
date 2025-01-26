@@ -1,7 +1,5 @@
 import numpy as np 
 import pandas as pd
-
-
 from scipy.optimize import linear_sum_assignment
 from sklearn.metrics.pairwise import cosine_similarity
 
@@ -35,11 +33,6 @@ def compute_match(Signatures : pd.DataFrame, Signatures_true : pd.DataFrame) -> 
     Signatures_sorted = Signatures.iloc[:, row_ind]
     Signatures_true_sorted = Signatures_true.iloc[:, col_ind]
 
-    print(Signatures_sorted)
-    print(Signatures_true_sorted)
-    print("Shape of signatures_sorted: ", Signatures_sorted.shape)
-    print("Shape of signatures_true_sorted: ",Signatures_true_sorted.shape)
-
     simils = np.diag(cosine_similarity(Signatures_sorted.T, Signatures_true_sorted.T))
 
     match_df = pd.DataFrame({
@@ -48,4 +41,6 @@ def compute_match(Signatures : pd.DataFrame, Signatures_true : pd.DataFrame) -> 
         'Similarity' : simils
     })
 
-    return match_df
+    mean_similarity = np.mean(match_df['Similarity'])
+
+    return match_df, mean_similarity
