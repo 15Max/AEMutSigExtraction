@@ -27,7 +27,7 @@ def plot_clusters(reduced_signatures, labels, medoid_indices, LATENT_DIM, title 
     plt.show()
 
 
-
+# TODO: finish this function
 def plot_clusters_with_cosmic(reduced_signatures, labels, medoid_indices, matched , cosmic, LATENT_DIM, title = "AENMF Signatures"):
 
     plt.figure(figsize=(10, 6))
