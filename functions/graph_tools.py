@@ -1,8 +1,7 @@
 import matplotlib.pyplot as plt
-import seaborn as sns
 import numpy as np
-import pandas as pd
 import matplotlib.patches as mpatches
+from matplotlib.patches import Patch
 
 
 # Function to plot Kmedoids clusters reduced with PCA
@@ -124,3 +123,75 @@ def plot_signature(signatures, name='DeNovo_Signatures'):
         # Display the plot in the notebook
         
         plt.show()
+
+
+
+def plot_cosine_similarity_matrix(all_matches, colormap="tab20", title="Cosine similarity matrix", figsize=(7, 7), legend_colums=4):
+    all_signatures = all_matches.iloc[:, 0::2]
+    all_similarities = all_matches.iloc[:, 1::2]
+
+    # Find the unique signatures
+    unique_signatures = all_signatures.stack().unique()
+    n_signatures = len(unique_signatures)
+
+    # Choose a colormap
+    cmap = plt.get_cmap(colormap, n_signatures)
+    
+    # Map each signature to an RGBA color
+    sig_to_color = {}
+    for i, sig in enumerate(unique_signatures):
+        rgba = cmap(i)
+        sig_to_color[sig] = rgba
+
+    # Create a color matrix
+    N, M = all_signatures.shape
+    color_matrix = np.zeros((N, M, 4))  # 4 for RGBA
+    
+    for i in range(N):
+        for j in range(M):
+            color_matrix[i, j] = sig_to_color[all_signatures.iloc[i, j]]
+
+    # Plot colored by signature
+    fig, ax = plt.subplots(figsize=figsize)
+    ax.imshow(color_matrix, interpolation='nearest')
+
+    # Overlay similarity values
+    for i in range(N):
+        for j in range(M):
+            val = all_similarities.iloc[i, j]
+            ax.text(
+                j, i,                
+                f"{val:.2f}",        
+                ha='center',
+                va='center',
+                color='white',
+                fontsize=8
+            )
+
+    ax.set_xticks([])
+    ax.set_yticks([])
+    
+    #ax.set_xticks(np.arange(N))
+    #ax.set_yticks(np.arange(M))
+    #ax.set_xticklabels([f"Col {c}" for c in range(N)])
+    #ax.set_yticklabels([f"Row {r}" for r in range(M)])
+
+    ax.set_title(title)
+    ax.invert_yaxis()
+
+    # 1) Build legend handles for each signature
+    legend_elements = []
+    for signature, rgba in sig_to_color.items():
+        patch = Patch(facecolor=rgba, edgecolor='black', label=signature)
+        legend_elements.append(patch)
+
+    ax.legend(
+        handles=legend_elements,
+        bbox_to_anchor=(0.5, -0.05),
+        loc='upper center',
+        ncol=legend_colums,  # how many columns to use in the legend
+        title="Signatures"
+    )
+
+    #plt.tight_layout()  
+    plt.show()
