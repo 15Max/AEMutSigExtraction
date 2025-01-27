@@ -2,6 +2,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from tqdm import tqdm 
+import pandas as pd
+import numpy as np
 
 class Abs(nn.Module):
     def forward(self, x):
@@ -82,19 +84,22 @@ class dsae(torch.nn.Module):
 
 def add_noise(data :torch.tensor, mu : float , sigma : float) -> torch.tensor:
     """
-    Adds random gaussian noise to the input data.
+    Adds random Gaussian noise to the input Pandas DataFrame.
     
     Args:
-        data (torch.Tensor): Input data.
+        data (pd.DataFrame): Input data as a Pandas DataFrame.
         mu (float): Mean of the noise.
         sigma (float): Standard deviation of the noise.
     
     Returns:
-        torch.Tensor: Noisy data.
-    
+        pd.DataFrame: Noisy data as a Pandas DataFrame.
     """
-    noise = sigma * torch.randn_like(data) + mu
+    # Generate noise with the same shape as the input data
+    noise = np.random.normal(loc=mu, scale=sigma, size=data.shape)
+    
+    # Add noise to the data
     noisy_data = data + noise
+    
     return noisy_data
 
 
@@ -145,69 +150,3 @@ def train_dsae(model, training_data, criterion, optimizer, l1_lambda=1e-12, mu =
     signature = dec_weights
 
     return model, training_loss, signature.T, exposure.T
-
-    for epoch in range(epochs):
-        model.train()
-        train_loss = 0.0
-
-        for batch_noisy, batch_clean in train_loader:
-            # Both `batch_noisy` and `batch_clean` are (96, batch_size)
-            batch_noisy, batch_clean = batch_noisy.to(device), batch_clean.to(device)
-
-            optimizer.zero_grad()
-            output = model(batch_noisy)  # Forward pass through the model
-
-            loss = criterion(output, batch_clean)  # Compute reconstruction loss
-            l1_penalty = l1_lambda * torch.norm(model.encoder[0].weight, p=1)  # L1 penalty on encoder weights
-            loss += l1_penalty
-
-            loss.backward()
-            optimizer.step()
-
-            train_loss += loss.item()
-
-        train_loss /= len(train_loader)  # Normalize by the number of batches
-        train_losses.append(train_loss)
-
-        # Check for convergence based on training loss
-        if len(train_losses) > 1:
-            if relative_tol:
-                diff = abs(train_losses[-1] - train_losses[-2]) / train_losses[-2]
-            else:
-                diff = abs(train_losses[-1] - train_losses[-2])
-
-            if diff < tol:
-                print(f"Convergence reached at epoch {epoch+1}")
-                break
-
-        # Validation Loss (optional, for monitoring only)
-        model.eval()
-        val_loss = 0.0
-        with torch.no_grad():
-            for batch_noisy, batch_clean in test_loader:
-                batch_noisy, batch_clean = batch_noisy.to(device), batch_clean.to(device)
-                output = model(batch_noisy)
-                val_loss += criterion(output, batch_clean).item()
-
-        val_loss /= len(test_loader)  # Normalize by the number of batches
-        val_losses.append(val_loss)
-
-        # Early stopping based on validation loss
-        if val_loss < best_val_loss:
-            best_val_loss = val_loss
-            patience_counter = 0
-        else:
-            patience_counter += 1
-            if patience_counter >= patience:
-                print(f"Early stopping at epoch {epoch+1}")
-                break
-
-    # Extract signature and exposure matrices from the model
-    enc_weights = model.encoder[0].weight.data.T  # Shape (96, 4)
-    dec_weights = model.decoder[0].weight.data.T  # Shape (4, 96)
-
-    # Compute signature and exposure matrices
-    signature = train_loader.dataset.noisy_data @ enc_weights  # Shape (96, 4)
-    exposure = dec_weights  # Shape (4, 96)
-
-    return model, train_losses, val_losses, signature, exposure
