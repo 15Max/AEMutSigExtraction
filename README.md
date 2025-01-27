@@ -3,7 +3,7 @@
 ## Introduction 
 Mutational signatures are distinct patterns of mutations that result from specific biological processes or external environmental factors.
 
-When we refer to mutations, we mean changes in the DNA sequence of an alles, one of the two copies of a gene that we inherit from our parents.
+When we refer to mutations, we mean changes in the DNA sequence of an alleles, one of the two copies of a gene that we inherit from our parents.
 
 When analyzing mutations in normal tissue, we compare them to the reference genome, which represents the most common sequence of the human genome. Mutations can be classified into two main categories:
 
@@ -42,19 +42,19 @@ The following image shows an example of a mutational signature associated with U
 
 <img src="images/MutSig.png" alt="NMF" width="700"/>
 
-A catalog of known mutational sginatures can be found in the [COSMIC database](https://cancer.sanger.ac.uk/signatures), which is used as a reference for comparing and identifying new signatures.
+A catalog of known mutational signatures can be found in the [COSMIC database](https://cancer.sanger.ac.uk/signatures), which is used as a reference for comparing and identifying new signatures.
 ## Project overview TODO:check this part
 Signatures can be represented as a matrix factorization problem, where the data matrix, consisting of non-negative counts of mutations in each trinucleotide context, is factorized into two non-negative matrices: the signature matrix and the exposure matrix. 
-Throught this project we want to extract these two lower rank matrices, with a special focus on autoencoders.
+Throughout this project we want to extract these two lower rank matrices, with a special focus on autoencoders.
 
-TODO: fix this part when we have decided on dataset/data augmetation/synthetic data
+TODO: fix this part when we have decided on dataset/data augmentation/synthetic data
 
 The data we used is....
 
 Firstly, as a benchmark, we used NMF and convex-NMF to extract the signature and exposure  matrices, these are the most common methods used for this task. 
 Then, we explored the use of autoencoders, starting with a shallow autoencoder with non-negativity constraints.
 Since the activation function is identity, this autoencoder is equivalent to PCA.
-We also imìnvestigated the use of a shallow denoising sparse autoencoder,with non-negativity constraints to ensure the extracted weigths were coherent with the problem at hand. This model should be more robust to noise and overfitting, and provide a more sparse representation of the data.
+We also investigated the use of a shallow denoising sparse autoencoder,with non-negativity constraints to ensure the extracted weights were coherent with the problem at hand. This model should be more robust to noise and overfitting, and provide a more sparse representation of the data.
 
 #TODO : check this part, fix it when decided what to do
 Finally, we implemented a more complex autoencoder, MUSE-XAE, which incorporates bootstrapping, Poisson likelihood in the loss function, early stopping, and k-means to extract the best decoder weights. 
@@ -73,7 +73,7 @@ The results should provide insights into the performance of autoencoders compare
 
 Non-negative matrix factorization (NMF) is a tool for unsupervised learning that factorizes a non-negative data matrix into a product of two non-negative matrices of lower dimension.
 
-Suppose we have a non-negative matrix $V$ of size $M \times N$, where $ M$ is the number of features and $N$ is the number of samples. NMF decoposes $V$ into two non-negative matrices: 
+Suppose we have a non-negative matrix $V$ of size $M \times N$, where $ M$ is the number of features and $N$ is the number of samples. NMF decomposes $V$ into two non-negative matrices: 
 - the basis matrix $ H\in \mathbb{R}^{M \times K}_+$ 
 - the weight matrix  $ W\in \mathbb{R}^{K \times N}_+$ 
 

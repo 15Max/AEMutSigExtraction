@@ -23,7 +23,6 @@ def plot_clusters(reduced_signatures, labels, medoid_indices, LATENT_DIM, title 
     plt.xlabel("Principal component 1")
     plt.ylabel("Principal component 2")
     plt.legend()
-    plt.grid()
     plt.show()
 
 
@@ -49,7 +48,6 @@ def plot_clusters_with_cosmic(reduced_signatures, labels, medoid_indices, matche
     plt.legend()
     plt.gca().set_xticks([])
     plt.gca().set_yticks([])
-    plt.grid()
     plt.show()
 
 
@@ -103,7 +101,6 @@ def plot_signature(signatures, name='DeNovo_Signatures'):
     
     for signature in range(n_signatures):
         fig, ax = plt.subplots(figsize=(16, 8))
-        sns.set_style('darkgrid')
         
         # Extract the signature values
         s = signatures.loc[index].values[:, signature]

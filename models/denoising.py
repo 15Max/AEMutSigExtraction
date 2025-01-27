@@ -82,31 +82,52 @@ class dsae(torch.nn.Module):
 
 
 
-def add_noise(data :torch.tensor, mu : float , sigma : float) -> torch.tensor:
+def add_noise(data :torch.tensor,  type : str = 'Gaussian', **kwargs) -> torch.tensor:
     """
     Adds random Gaussian noise to the input Pandas DataFrame.
     
     Args:
         data (pd.DataFrame): Input data as a Pandas DataFrame.
+        type (str): Type of noise to add either 'Gaussian' or 'Poisson'
         mu (float): Mean of the noise.
         sigma (float): Standard deviation of the noise.
     
     Returns:
         pd.DataFrame: Noisy data as a Pandas DataFrame.
     """
-    # Generate noise with the same shape as the input data
-    noise = np.random.normal(loc=mu, scale=sigma, size=data.shape)
+
+    if type == 'Gaussian':
+        mu = kwargs.get('mu', 0)
+        sigma = kwargs.get('sigma', 1)
+        noise = np.random.normal(loc=mu, scale=sigma, size=data.shape)
+        
+        noisy_data = data + noise
+        return noisy_data
     
-    # Add noise to the data
-    noisy_data = data + noise
+    elif type == 'Poisson':
+
+        generated_data = np.random.poisson(lam = data.numpy())
+
+        noise = data - generated_data
+
+        noisy_data = data + noise
+
+        noisy_data = noisy_data.clamp(min=0).clone().detach().float()
+
+        return noisy_data
     
-    return noisy_data
+    else:
+        raise ValueError("Noise type not recognized. Choose between 'Gaussian' or 'Poisson'")
 
 
-def train_dsae(model, training_data, criterion, optimizer, l1_lambda=1e-12, mu = 0, sigma = 1, tol=1e-3, relative_tol=True, max_iter = 10_000_000):
+
+def train_dsae(model, training_data, criterion, optimizer, noise_type = 'Gaussian', l1_lambda=1e-12, mu = 0, sigma = 1, tol=1e-3, relative_tol=True, max_iter = 10_000_000):
 
     training_data_tensor = torch.tensor(training_data.values, dtype=torch.float32)
-    training_noisy_tensor = add_noise(training_data_tensor, mu, sigma)
+
+    noise_params = {'type' : noise_type, 'mu' : mu, 'sigma' : sigma}
+
+    training_noisy_tensor = add_noise(training_data_tensor, **noise_params)
 
     training_loss = []
     diff = float('inf')
