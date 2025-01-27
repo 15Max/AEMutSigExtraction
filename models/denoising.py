@@ -2,6 +2,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from tqdm import tqdm 
+import pandas as pd
+import numpy as np
 
 class Abs(nn.Module):
     def forward(self, x):
@@ -54,94 +56,58 @@ class dsae(nn.Module):
         x = self.decoder(x)  
         return x
 
-
-def add_noise(data :torch.tensor, mu : float , sigma : float) -> torch.tensor:
+def add_noise(data: pd.DataFrame, mu: float, sigma: float) -> pd.DataFrame:
     """
-    Adds random gaussian noise to the input data.
+    Adds random Gaussian noise to the input Pandas DataFrame.
     
     Args:
-        data (torch.Tensor): Input data.
+        data (pd.DataFrame): Input data as a Pandas DataFrame.
         mu (float): Mean of the noise.
         sigma (float): Standard deviation of the noise.
     
     Returns:
-        torch.Tensor: Noisy data.
-    
+        pd.DataFrame: Noisy data as a Pandas DataFrame.
     """
-    noise = sigma * torch.randn_like(data) + mu
+    # Generate noise with the same shape as the input data
+    noise = np.random.normal(loc=mu, scale=sigma, size=data.shape)
+    
+    # Add noise to the data
     noisy_data = data + noise
+    
     return noisy_data
 
 
-def train_dsae(model, train_loader, test_loader, criterion, optimizer, device, epochs, l1_lambda=1e-12, tol=1e-3, relative_tol=True, patience=5):
-    model.to(device)
-    
-    train_losses = []
-    val_losses = []
+def train_dsae(model, training_data, criterion, optimizer, tol = 1e-3, relative_tol = True, max_iter = 100_000_000, l1_lambda=1e-12):
+    training_data_tensor = torch.tensor(training_data.values, dtype = torch.float32)
 
-    best_val_loss = float('inf')
-    patience_counter = 0
+    training_loss = []
+    diff = float('inf')
 
-    for epoch in tqdm(range(epochs)):
-        model.train()
-        train_loss = 0.0
+    iters = 0
+    while diff > tol and iters < max_iter: # Convergence criterion
+        optimizer.zero_grad() 
+        output = model(training_data_tensor)
+  
+        loss = criterion(output, training_data_tensor)
+        l1_penalty = l1_lambda * torch.norm(model.encoder[0].weight, 1) #L1 regularization
+        loss += l1_penalty
+        
+        loss.backward()
+        optimizer.step()
 
-        for batch_noisy, batch_clean in train_loader:
-            batch_noisy, batch_clean = batch_noisy.to(device), batch_clean.to(device)
+        training_loss.append(loss.item())
 
-            optimizer.zero_grad()
-            output = model(batch_noisy)
-
-            loss = criterion(output, batch_clean)
-            l1_penalty = l1_lambda * torch.norm(model.encoder[0].weight, p=1)  # L1 penalty on encoder weights
-            loss += l1_penalty
-
-            loss.backward()
-            optimizer.step()
-
-            train_loss += loss.item()
-
-        train_loss /= len(train_loader)  # Normalize by the number of batches
-        train_losses.append(train_loss)
-
-        # Check for convergence on training loss
-        if len(train_losses) > 1:
+        if len(training_loss) > 1:
             if relative_tol:
-                diff = abs(train_losses[-1] - train_losses[-2]) / train_losses[-2]
+                diff = abs(training_loss[-1] - training_loss[-2])/training_loss[-2]
             else:
-                diff = abs(train_losses[-1] - train_losses[-2])
+                diff = abs(training_loss[-1] - training_loss[-2])
 
-            if diff < tol:
-                print(f"Convergence reached at epoch {epoch+1}")
-                break
-
-        # Validation Loss (optional, for monitoring only)
-        model.eval()
-        val_loss = 0.0
-        with torch.no_grad():
-            for batch_noisy, batch_clean in test_loader:
-                batch_noisy, batch_clean = batch_noisy.to(device), batch_clean.to(device)
-                output = model(batch_noisy)
-                val_loss += criterion(output, batch_clean).item()
-
-        val_loss /= len(test_loader)  # Normalize by the number of batches
-        val_losses.append(val_loss)
-
-        # Early stopping with patience (optional, based on validation loss)
-        if val_loss < best_val_loss:
-            best_val_loss = val_loss
-            patience_counter = 0
-        else:
-            patience_counter += 1
-            if patience_counter >= patience:
-                print(f"Early stopping at epoch {epoch+1}")
-                break
-
-    # Extract signature and exposure matrices from the model
-    enc_weights = model.encoder[0].weight.data.T 
-    dec_weights = model.decoder[-1].weight.data.T
+        # Go to next iteration
+        iters += 1
     
-    signature = train_loader.dataset.data @ enc_weights
-    exposure = dec_weights
+    signature = training_data @ model.enc_weight.data
+    exposure = model.dec_weight.data
 
-    return model, train_losses, val_losses, signature, exposure
+    return model, training_loss, signature, exposure
+
