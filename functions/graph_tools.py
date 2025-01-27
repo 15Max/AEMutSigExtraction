@@ -75,10 +75,6 @@ def base_plot_signature(array, axs, index, ylim=1):
     axs.set_xticks(x)  
     axs.set_xticklabels(index, rotation=90, fontsize=7)
     
-    for tick_label, tick_color in zip(axs.get_xticklabels(), color):
-        tick_label.set_color(tick_color)  
-
-
 
 
 def plot_signature(signatures, name='DeNovo_Signatures'):
