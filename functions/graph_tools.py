@@ -17,7 +17,7 @@ def plot_clusters(reduced_signatures, labels, medoid_indices, LATENT_DIM, title 
     # Highlight medoids
     medoid_points = reduced_signatures[medoid_indices]
     plt.scatter(medoid_points[:, 0], medoid_points[:, 1], 
-                color='black', marker='x', s=100, label="Medoids")
+                color='black', marker='+', s=100, label="Medoids")
 
     plt.title(title)
     plt.xlabel("Principal component 1")

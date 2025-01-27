@@ -34,7 +34,7 @@ def nmf(catalog_matrix : np.ndarray, num_sign : int, tol : float = 1e-6, max_ite
     E = np.random.rand(num_sign, n)
 
     # Compute the loss (Frobenius norm squared)
-    loss = np.linalg.norm(catalog_matrix - S@E, ord = 'fro')
+    loss = np.mean((catalog_matrix - S@E) ** 2)
     losses.append(loss)
     
     diff = float('inf')
