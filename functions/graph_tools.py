@@ -2,10 +2,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 import matplotlib.patches as mpatches
 from matplotlib.patches import Patch
+import pandas as pd
 
 
 # Function to plot Kmedoids clusters reduced with PCA
-def plot_clusters(reduced_signatures, labels, medoid_indices, LATENT_DIM, title = "AENMF Signatures"):
+def plot_clusters(reduced_signatures, labels, medoid_indices, LATENT_DIM : int, title : str = "AENMF Signatures"):
 
     plt.figure(figsize=(10, 6))
     # Plot all points colored by cluster
@@ -74,7 +75,7 @@ def base_plot_signature(array, axs, index, ylim=1):
     
 
 
-def plot_signature(signatures, name='DeNovo_Signatures'):
+def plot_signature(signatures):
     """
     Visualize mutational signatures directly in a Jupyter Notebook.
     
@@ -126,7 +127,7 @@ def plot_signature(signatures, name='DeNovo_Signatures'):
 
 
 
-def plot_cosine_similarity_matrix(all_matches, colormap="tab20", title="Cosine similarity matrix", figsize=(7, 7), legend_colums=4):
+def plot_cosine_similarity_matrix(all_matches: pd.DataFrame, colormap : str ="tab20", title : str ="Cosine similarity matrix", figsize : tuple =(7, 7), legend_colums : int =4) -> None:
     all_signatures = all_matches.iloc[:, 0::2]
     all_similarities = all_matches.iloc[:, 1::2]
 
