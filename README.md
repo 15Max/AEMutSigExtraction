@@ -3,7 +3,7 @@
 ## Introduction 
 Mutational signatures are distinct patterns of mutations that result from specific biological processes or external environmental factors.
 
-When we refer to mutations, we mean changes in the DNA sequence of an allel, one of the two copies of a gene that we inherit from our parents.
+When we refer to mutations, we mean changes in the DNA sequence of an allele, one of the two copies of a gene that we inherit from our parents.
 
 When analyzing mutations in normal tissue, we compare them to the reference genome, which represents the most common sequence of the human genome. Mutations can be classified into two main categories:
 
