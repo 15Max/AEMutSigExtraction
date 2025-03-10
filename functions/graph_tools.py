@@ -75,7 +75,7 @@ def base_plot_signature(array, axs, index, ylim=1):
     
 
 
-def plot_signature(signatures):
+def plot_signature(signatures, model : str = "Autoencoder"):
     """
     Visualize mutational signatures directly in a Jupyter Notebook.
     
@@ -116,12 +116,10 @@ def plot_signature(signatures):
         l6 = mpatches.Patch(color=(0.902, 0.765, 0.737), label='T>G')
         
         # Add title and legend
-        ax.text(0.01, 0.94, f'AENMF-SBS{chr(64 + signature + 1)}\n', transform=ax.transAxes, 
+        ax.text(0.01, 0.94, f'{model}-SBS {chr(64 + signature + 1)}\n', transform=ax.transAxes, 
                 fontsize=15, fontweight='bold', va='top', ha='left')
         ax.legend(handles=[l1, l2, l3, l4, l5, l6], loc='upper center', ncol=6, 
                   bbox_to_anchor=(0.5, 1.1), fontsize=18)
-        
-        # Display the plot in the notebook
         
         plt.show()
 
