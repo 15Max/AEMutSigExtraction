@@ -58,6 +58,17 @@ def nmf(catalog_matrix : np.ndarray, num_sign : int, tol : float = 1e-6, max_ite
             print(f"Iteration: {n_iter}, Loss: {losses[-1]}")
 
     return S, E, losses
+
+
+def refit_NMF(catalog_matrix: np.ndarry, signature_matrix: np.ndarray, tol : float = 1e-6, max_iter : int = 10_000_000):
+    '''
+    Performs NMF on a catalog matrix using a fixed signature matrix. This function is used on the test dataset to assess if the
+    signature matrix extracted from the train data is good.
+    Params
+
+    
+
+    '''
     
 
 
