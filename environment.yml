@@ -2,9 +2,9 @@ name: DL_GENOMICS
 channels:
   - pytorch
 dependencies:
-  - python
+  - python=3.10
   - jupyter
-  - numpy  
+  - numpy < 2.0
   - pandas
   - matplotlib
   - pytorch
