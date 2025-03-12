@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from sklearn.decomposition import NMF as nmf_sklearn # Just for comparison
 import os
 
-def nmf(catalog_matrix : np.ndarray, num_sign : int, tol : float = 1e-6, max_iter : int = 10_000_000):
+def nmf(catalog_matrix : np.ndarray, num_sign : int, tol : float = 1e-6, max_iter : int = 10_000_000) -> tuple:
     """
     Performs Non-negative Matrix Factorization with a given tolerance level.
 
@@ -34,21 +34,21 @@ def nmf(catalog_matrix : np.ndarray, num_sign : int, tol : float = 1e-6, max_ite
     E = np.random.rand(num_sign, n)
 
     # Compute the loss (Frobenius norm squared)
-    loss = np.mean((catalog_matrix - S@E) ** 2)
+    loss = np.linalg.norm(catalog_matrix - S@E, ord = 'fro')
     losses.append(loss)
     
     diff = float('inf')
     n_iter = 0
     early_stop = False
     
-    while(diff > tol and n_iter < max_iter and early_stop == False):
+    while(diff > tol and n_iter < max_iter):
         n_iter += 1 
 
 
         E = E*(np.divide(S.T@catalog_matrix, S.T@S@E))
         S = S*(np.divide(catalog_matrix@(E.T), S@E@(E.T)))
         
-        loss= np.linalg.norm(catalog_matrix - S@E, ord = 'fro')
+        loss = np.linalg.norm(catalog_matrix - S@E, ord = 'fro')
         losses.append(loss)
 
         diff = abs(losses[-1] - losses[-2])
@@ -60,16 +60,50 @@ def nmf(catalog_matrix : np.ndarray, num_sign : int, tol : float = 1e-6, max_ite
     return S, E, losses
 
 
-def refit_NMF(catalog_matrix: np.ndarry, signature_matrix: np.ndarray, tol : float = 1e-6, max_iter : int = 10_000_000):
+def refit_NMF(catalog_matrix: np.ndarray, signature_matrix: np.ndarray, tol : float = 1e-6, max_iter : int = 10_000_000) -> list:
     '''
     Performs NMF on a catalog matrix using a fixed signature matrix. This function is used on the test dataset to assess if the
     signature matrix extracted from the train data is good.
-    Params
 
-    
+    Parameters:
+    catalog_matrix (numpy.ndarray): Catalog matrix of shape m x n where m is the number of SBS mutation types (96) and n is the number of patiens
+    signature_matrix (numpy.ndarray): Signature matrix of shape (m, num_sign). (Base)
+    tol (float): Tolerance level for convergence
+    max_iter (int): Maximum number of iterations before analysis is disrupted (default is 10e8).
 
+    Returns:
+    losses (list): List of loss values at each iteration.
     '''
-    
+
+    n = catalog_matrix.shape[1]
+    losses = []
+
+    num_sign = signature_matrix.shape[1]
+
+    E = np.random.rand(num_sign, n)
+
+    # Compute the loss (Frobenius norm squared)
+    loss = np.linalg.norm(catalog_matrix - signature_matrix@E, ord = 'fro')
+    losses.append(loss)
+
+    diff = float('inf')
+    n_iter = 0
+    early_stop = False
+
+    while(diff > tol and n_iter < max_iter):
+        n_iter += 1 
+
+        E = E*(np.divide(signature_matrix.T@catalog_matrix, signature_matrix.T@signature_matrix@E))
+        
+        loss= np.linalg.norm(catalog_matrix - signature_matrix@E, ord = 'fro')
+        losses.append(loss)
+
+        diff = abs(losses[-1] - losses[-2])
+
+        if n_iter%1000 == 0:
+            print(f"Iteration: {n_iter}, Loss: {losses[-1]}")
+
+    return losses
 
 
 if __name__ == '__main__':

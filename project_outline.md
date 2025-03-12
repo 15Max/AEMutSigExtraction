@@ -39,3 +39,9 @@ If we have a prior knowledge of the mutational signatures inside the data, and w
 5) Losses
 6) Optimizers
 7) Hyper param tuning
+
+##### TO DO
+
+1) Fix the way we compute the test error: for NMF we fix the signature and compute the best exposure. With AENMF? Investigate
+2) Unify muse and denoising
+3) Finish developing the correct training cycle
