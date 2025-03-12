@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.patches as mpatches
 from matplotlib.patches import Patch
 import pandas as pd
+from matplotlib.colors import ListedColormap
 
 
 # Function to plot Kmedoids clusters reduced with PCA
@@ -125,26 +126,35 @@ def plot_signature(signatures, model : str = "Autoencoder"):
 
 
 
-def plot_cosine_similarity_matrix(all_matches: pd.DataFrame, colormap : str ="tab20", title : str ="Cosine similarity matrix", figsize : tuple =(7, 7), legend_colums : int =4) -> None:
+def plot_cosine_similarity_matrix(all_matches: pd.DataFrame, title : str ="Cosine similarity matrix", figsize : tuple =(7, 7), legend_colums : int =4, palette = 'Paired') -> None:
     all_signatures = all_matches.iloc[:, 0::2]
     all_similarities = all_matches.iloc[:, 1::2]
 
     # Find the unique signatures
     unique_signatures = all_signatures.stack().unique()
-    n_signatures = len(unique_signatures)
 
-    # Choose a colormap
-    cmap = plt.get_cmap(colormap, n_signatures)
+    # Custom colormap
+    #custom_colors = ['#1F8F99FF', '#52C4CCFF', '#99FAFFFF',  '#E6FFFFFF','#FFE6CCFF',  '#FF8F33FF', '#CC5800FF', '#994000FF','#B8B69EFF', '#88AB38FF', '#3B7D31FF']
+
+    # Create a ListedColormap
+    #custom_cmap = ListedColormap(custom_colors)
+    #custom_cmap
     
+    custom_cmap = plt.cm.get_cmap(palette, len(unique_signatures))
     # Map each signature to an RGBA color
     sig_to_color = {}
+
+
+
     for i, sig in enumerate(unique_signatures):
-        rgba = cmap(i)
+        rgba = custom_cmap(i)
         sig_to_color[sig] = rgba
 
     # Create a color matrix
     N, M = all_signatures.shape
     color_matrix = np.zeros((N, M, 4))  # 4 for RGBA
+
+    
     
     for i in range(N):
         for j in range(M):
@@ -154,31 +164,40 @@ def plot_cosine_similarity_matrix(all_matches: pd.DataFrame, colormap : str ="ta
     fig, ax = plt.subplots(figsize=figsize)
     ax.imshow(color_matrix, interpolation='nearest')
 
+
+
     # Overlay similarity values
     for i in range(N):
         for j in range(M):
+
+            ax.plot([j - 0.5, j - 0.5], [i - 0.5, i + 0.5], color='white', linewidth=3)  # Left edge
+            ax.plot([j + 0.5, j + 0.5], [i - 0.5, i + 0.5], color= 'white', linewidth=3)  # Right edge
+
             val = all_similarities.iloc[i, j]
             ax.text(
                 j, i,                
                 f"{val:.2f}",        
                 ha='center',
                 va='center',
-                color='white',
+                color='black',
                 fontsize=8
             )
 
     ax.set_xticks([])
     ax.set_yticks([])
-    
-    #ax.set_xticks(np.arange(N))
-    #ax.set_yticks(np.arange(M))
-    #ax.set_xticklabels([f"Col {c}" for c in range(N)])
-    #ax.set_yticklabels([f"Row {r}" for r in range(M)])
 
+    # For numbering columns along x-axis
+    #ax.set_xticks(range(M))
+    #ax.set_xticklabels(range(1, M + 1), fontsize=10)
+
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    ax.spines['left'].set_visible(False)
+    ax.spines['bottom'].set_visible(False)
+    
     ax.set_title(title)
     ax.invert_yaxis()
 
-    # 1) Build legend handles for each signature
     legend_elements = []
     for signature, rgba in sig_to_color.items():
         patch = Patch(facecolor=rgba, edgecolor='black', label=signature)
@@ -186,10 +205,10 @@ def plot_cosine_similarity_matrix(all_matches: pd.DataFrame, colormap : str ="ta
 
     ax.legend(
         handles=legend_elements,
-        bbox_to_anchor=(0.5, -0.05),
+        bbox_to_anchor=(0.6, -0.1),
         loc='upper center',
         ncol=legend_colums,  # how many columns to use in the legend
-        title="Signatures"
+        title="Matched signatures"
     )
 
     #plt.tight_layout()  
