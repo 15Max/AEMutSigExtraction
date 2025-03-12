@@ -3,49 +3,30 @@ import torch.nn.functional as F
 import torch.nn as nn
 from torch.utils.data import DataLoader, TensorDataset
 
+def frobenius_loss(output, target):
+    return torch.norm(output - target, p='fro')
 
-class Abs(nn.Module):
-    '''
-    Custom Abs module to wrap torch.abs for use in nn.Sequential
-    '''
-    def forward(self, x):
-        return torch.abs(x)
-    
 
 class aenmf(torch.nn.Module):
     """
     Autoencoder for Non-negative Matrix Factorization
-    Additional constraints can be added to the model:
-    - Projected Gradient (pg) 
-    - Absolute Values (abs)
+
     """
-    def __init__(self, input_dim, latent_dim, constraint = 'pg', xavier = False):
+    def __init__(self, input_dim, latent_dim):
         '''
         Constructor for the Autoencoder for Non-negative Matrix Factorization (AENMF) model.
 
         Parameters:
         - input_dim: Dimension of the input data
         - latent_dim: Dimension of the latent space
-        - constraint: Constraint type ('pg' for projected gradient, 'abs' for absolute values)
-        - xavier: If True, the weights are initialized using Xavier initialization
         '''
         super().__init__()
         
         self.input_dim = input_dim
         self.latent_dim = latent_dim
-        self.constraint = constraint 
-        self.xavier = xavier
 
-
-        if self.constraint == 'pg':
-            self.activation = nn.ReLU()
-        elif self.constraint == 'abs':
-            self.activation = Abs()
-        elif self.constraint == 'id':
-            self.activation = nn.Identity()
-        else:
-            raise ValueError('Constraint not recognized. Choose between pg, abs or id')
-
+        self.activation = nn.Identity()
+        
 
         ''' Encoder and Decoder layers '''
         self.encoder = nn.Sequential(
@@ -58,25 +39,48 @@ class aenmf(torch.nn.Module):
             self.activation
         )
 
-        ''' Initialize weights using Xavier initialization '''
-        if self.xavier:
-            for module in self.modules():
-                if isinstance(module, nn.Linear):
-                    nn.init.xavier_normal_(module.weight)
-                    # Ensure non-negative weights
-                    module.weight.data.clamp_(min=0)
+        self.initialize_weights()
+
+    def initialize_weights(self):
+        for module in self.modules():
+            if isinstance(module, nn.Linear):
+                nn.init.uniform_(module.weight, a=0.0, b=1.0)
+                module.weight.data.clamp_(min=0)
+    
+    def load_custom_weights(self, signature, encoder_bias=None):
+        """
+        Load custom weights (and optionally bias) into the encoder.
+        
+        Parameters:
+        - signature: torch.Tensor of shape (input_dim, latent_dim) (should be signature.T from `train_aenmf`)
+        - encoder_bias (optional): torch.Tensor of shape (latent_dim,)
+        """
+        if signature.shape != (self.input_dim, self.latent_dim):
+            raise ValueError(f"Expected signature of shape ({self.input_dim}, {self.latent_dim}), but got {signature.shape}")
+
+
+        print("Encoder weight shape:", self.encoder[0].weight.shape)
+        print("Signature shape:", signature.shape)
+
+        with torch.no_grad():
+            self.encoder[0].weight.copy_(signature.T)  # Load weights directly
+            if encoder_bias is not None:
+                self.encoder[0].bias.copy_(encoder_bias)
+
+        # Ensure non-negative constraint
+        self.encoder[0].weight.data.clamp_(min=0)
+
+    def freeze_encoder(self):
+        """Freeze encoder weights for inference or decoder-only training."""
+        for param in self.encoder.parameters():
+            param.requires_grad = False
 
 
 
     def forward(self, x):
         '''
-        Forward pass of the Autoencoder for Non-negative Matrix Factorization (AENMF) model.
+        Forward pass of the Autoencoder for Non-negative Matrix Factorization
 
-        Parameters:
-        - x: Input data
-
-        Returns:
-        - x: Output data
         '''
         x = self.encoder(x)
         x = self.decoder(x)
@@ -84,7 +88,7 @@ class aenmf(torch.nn.Module):
         return x
     
     
-def train_aenmf(model, training_data, criterion, optimizer, tol = 1e-3, relative_tol = True, max_iter = 100_000_000):
+def train_aenmf(model, training_data, optimizer, tol = 1e-3, relative_tol = True, max_iter = 100_000_000):
     '''
     Function to train the Autoencoder for Non-negative Matrix Factorization (AENMF) model.
 
@@ -113,7 +117,7 @@ def train_aenmf(model, training_data, criterion, optimizer, tol = 1e-3, relative
     while diff > tol and iters < max_iter: # Convergence criterion
         optimizer.zero_grad() 
         output = model(training_data_tensor)
-        loss = criterion(output, training_data_tensor)
+        loss = frobenius_loss(output, training_data_tensor)
         loss.backward()
         optimizer.step()
 
@@ -132,6 +136,9 @@ def train_aenmf(model, training_data, criterion, optimizer, tol = 1e-3, relative
                 diff = abs(training_loss[-1] - training_loss[-2])
 
         
+        if(iters % 1000 == 0):
+            print(f"Iteration {iters}: Loss = {loss.item()}")
+
         # Go to next iteration
         iters += 1
     
@@ -152,3 +159,8 @@ def train_aenmf(model, training_data, criterion, optimizer, tol = 1e-3, relative
 
 
     return model, training_loss, signature.T, exposure.T
+
+
+
+def test():
+    pass
