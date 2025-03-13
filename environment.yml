@@ -14,5 +14,7 @@ dependencies:
   - pip
   - pip:
     - scikit-learn
+    - skorch
     - scikit-learn-extra
     - scipy
+    
