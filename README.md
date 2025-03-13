@@ -59,13 +59,13 @@ We also imìnvestigated the use of a shallow denoising sparse autoencoder,with n
 #TODO : check this part, fix it when decided what to do
 Finally, we implemented a more complex autoencoder, MUSE-XAE, which incorporates bootstrapping, Poisson likelihood in the loss function, early stopping, and k-means to extract the best decoder weights. 
 The results should provide insights into the performance of autoencoders compared to the classical NMF methods, and potentially identify non-linear relationships between the data that are not captured by NMF.
-## Data (M)
+## Data 
 - Description of the data
   - GEL / Qualcosa di diverso
   - Dati sintetici (?), sicuramente in fase di sviluppo
 - Data preprocessing: data loading, augmentation (?), normalization
 
-## [NMF](references/AENMF.pdf) (A)
+## [NMF](references/AENMF.pdf) 
 In this first section we will provide a foundation to understand the relationship between non-negative matrix factorization (NMF) and non-negative autoencoders enabling proper interpretation and understanding of autoencoder-based alternatives to NMF. Since its introduction, NMF has been a popular tool for extracting interpretable, low-dimensional representations of high-dimensional data. However, recently, several studies have proposed to replace NMF with autoencoders.We find that the connection between the two models can be established through convex NMF, which is a restricted case of NMF. In particular, convex NMF is a special case of an autoencoder. The performance of NMF and autoencoders is compared within the context of extraction of mutational signatures from cancer genomics data.
 
 - What is NMF? $\checkmark$
@@ -95,7 +95,7 @@ $$\hat{V} = V W_1 W_2$$
 
 with $W_1, W^T_2 \in \mathbb{R}^{N \times K}_+$. We can obtain the NMF formulation by simply defining $H = V W_1$ and $W = W_2$.
 
-## [What are AE and their relationship with c-NMF](references/AENMF.pdf) (A)
+## [What are AE and their relationship with c-NMF](references/AENMF.pdf) 
 **Autoencoders** are a type of neural network used to learn efficient codings of input data. They work by compressing the input into a *latent-space* representation through the *encoder* and then reconstructing the output from this representation through the *decoder*. Choosing the dimension of the latent representation to be lower than the dimension of the input makes the autoencoder a dimensionality reduction technique. A single hidden layer and fully connected autoencoder’s reconstruction, $\hat{V}$ , of a data matrix, $V$ , is mathematically defined as:
 
 $$\hat{V} = \phi_{dec}(\phi_{dec}(VW_{enc} + b_{enc})W_{dec} + b_{dec})$$
@@ -107,7 +107,7 @@ By setting $b_{enc}=0_K, b_{dec}=0_N$, and $\phi_{enc}, \phi_{dec}:x \rightarrow
 The equivalence between C-NMF and AE-NMF is the link that enables one to interpret the parameters in AE-NMF similarly to NMF, therefore this orientation is crucial for proper comparison.
 Though the interpretation of AE-NMF, C-NMF, and NMF is similar, there are still considerable differences between C-NMF, AE-NMF, and standard NMF. In particular, NMF estimates $N · K + K · M$ parameters whereas AE-NMF and C-NMF estimates $2 · (K · N)$ parameters. Thus, AE-NMF and C- NMF will estimate a larger number of parameters in the factor matrices than NMF when the number of observations $N$ surpasses the number of features $M$, which is often the case within mutational signatures.
 
-## [Relationship between AE-NMF and PCA](references/AENMF.pdf) (A)
+## [Relationship between AE-NMF and PCA](references/AENMF.pdf)
 
 ### Brief recap on PCA 
 **Principal Component Analysis** (PCA) is a technique used for **dimensionality reduction** that identifies a set of orthogonal axes, called principal components, that capture the maximum variance in the data. 
@@ -175,39 +175,15 @@ As we can see from this formulations, $(\Diamond)$ and $(\triangle)$ are really 
 
 The linear autoencoder is said to apply PCA to the input data in the sense that its output is a projection of the data onto the low dimensional principal subspace. However, unlike actual PCA, the coordinates of the output of the bottleneck are correlated and are not sorted in descending order of variance. In addition, the solutions for reduction to different dimensions are not nested: when reducing the data from dimension $n$ to dimension $m_1$, the first $m_2$ vectors ($m_2 < m_1$) are not an optimal solution to reduction from dimension $n$ to $m_2$, which therefore requires training an entirely new autoencoder.
 
-## [Denoising Sparse Autoencoder](references/Denoising.pdf) (M)
-- TODO: Add a bit more mathematical notation, after we decide what to use, to avoid inconsistencies
-
-Denoising sparse autoencoders are a combination of two techniques: denoising autoencoders and sparse autoencoders.
-### Denoising autoencoders
-Denoising autoencoders are trained to reconstruct the original input from a corrupted version of it. This is done by adding noise to the input data and training the model to recover the original data. The idea behind this technique is to make the autoencoder more robust to noise and improve its generalization capabilities.
-In our case, we decided to add random Gaussian noise to the input count matrices before the training procedure.
-### Sparse autoencoder
-Sparse autoencoders are designed to learn a sparse representation of the input data. This means the model is encouraged to use only a small number of neurons in the hidden layer, leading to a more compact and efficient representation. This helps reduce overfitting and enhances generalization.
-To enforce sparsity, we incorporated L1 regularization in the loss function, which penalizes large activations in the hidden layer.
-
-TODO: add what we did in the project
-
-## [MUSE-XAE](references/MUSE-XAE.pdf) (N)
-
-### Bootstrapping (data aug)
-### Poissong Likelihood in loss + early stopping 
-### while the third term represents the logarithm of the minimum volume constraint (??) (vediamo se metterlo) $$\beta$$
-### K-means to extract best decoder weights -> Consensus matrices
-### Signature assignment
-### De novo extraction scenario on synt data (1)
-### De novo extraction on real data (GEL/WGS)
-### Analysis of how data aug improves results on various metrics
-### (Confronto generale con i nostri AEs ed NMF)
-### T-sne (depending on what we use for dataset)
-
-## Denoising Sparse Muse-XAE (maybe) (N)
+## Custom Autoencoder
 
 
-## Results (N + M + A)
 
 
-## Conclusion (N + M + A)
+## Results 
+
+
+## Conclusion 
 
 
 
@@ -217,9 +193,10 @@ TODO: add what we did in the project
 - [Marta Lucas](https://github.com/15Max)
 - [Annalisa Paladino](https://github.com/annalisapaladino)
 
-Checkout our brief [presentation](https://docs.google.com/presentation/d/1hB-mI9om3PHqgEYXrScLB-Zd6lbMrCy3XqS4fKMXX7o/edit?usp=sharing) for a quick overview of the project.
- #TODO : add a link with visualization permits only
-## References (N + M + A)
+Checkout our brief [presentation] for an overview of the project.
+# TODO: add presentation link
+
+## References 
 - On the Relation Between Autoencoders and Non-negative Matrix
 Factorization, and Their Application for Mutational Signature
 Extraction ; Egendal et al. (2024)
