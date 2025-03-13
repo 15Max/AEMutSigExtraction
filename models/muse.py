@@ -7,6 +7,7 @@ import pandas as pd
 import os
 from torch.utils.data import DataLoader, TensorDataset
 
+
 class HybridLoss(nn.Module):
     '''
     Class for the Hybrid Loss function. The Hybrid Loss function is a combination of the Negative Poisson Log-Likelihood
@@ -36,12 +37,12 @@ class HybridLoss(nn.Module):
         total_loss (float): The total loss of the model
         """
         # Negative Poisson Log-Likelihood Loss (NPLL)
-        npll_loss = torch.sum(x_hat - x * torch.log(x_hat + self.eps))  # 🔹 Add stability
+        npll_loss = torch.sum(x_hat - x * torch.log(x_hat + self.eps))  # Add stability
 
         # Apply Minimum Volume Regularization (as constraint)
         gram_matrix = torch.mm(decoder_weights, decoder_weights.T)
         identity = torch.eye(gram_matrix.size(0), device=gram_matrix.device)
-        _, log_det_value = torch.slogdet(gram_matrix + identity)  # 🔹 Use numerically stable determinant
+        _, log_det_value = torch.slogdet(gram_matrix + identity)  # Use numerically stable determinant
 
         total_loss = npll_loss + (self.beta * log_det_value) + reg_enc_loss
 
@@ -66,12 +67,10 @@ class Encoder(nn.Module):
     refit (bool): Whether to use the refitting mechanism (for signature extraction)
     refit_penalty (float): The penalty for the refitting mechanism (for signature extraction)
     '''
-    def __init__(self, input_dim, l_1, latent_dim, refit=False, refit_penalty=1e-3):
+    def __init__(self, input_dim, l_1, latent_dim):
         super(Encoder, self).__init__()
-        
-        self.refit = refit
-        self.refit_penalty = refit_penalty
-        self.latent_activation = F.relu if refit else F.softplus
+    
+        self.latent_activation =  F.softplus
 
         self.encoder = nn.Sequential(
             nn.Linear(input_dim, l_1),      # fc1
@@ -89,6 +88,14 @@ class Encoder(nn.Module):
 
         self.last_layer = nn.Linear(l_1 // 4, latent_dim)  # Latent layer
 
+        self.initialize_weights()
+
+    
+    def initialize_weights(self):
+        for module in self.modules():
+            if isinstance(module, nn.Linear):
+                nn.init.uniform_(module.weight, a=0.0, b=1.0)
+
     def forward(self, x):
         '''
         Method to forward pass the input data through the model.
@@ -104,20 +111,7 @@ class Encoder(nn.Module):
         x = self.last_layer(x)  # Last layer (Linear)
         x = self.latent_activation(x)  # Activation
 
-        reg_loss = 0
-
-        if self.refit:
-
-            # Compute L1 regularization on the activation, note that in the paper it is said that the regularization
-            # happens on both the output of the encoder and the weights of the last layer of the encoder, but as of now
-            # (commit 094f902) the regularization is only applied to the output of the encoder.
-
-            reg_loss = self.refit_penalty * torch.norm(x, p=1)
-            reg_loss += self.refit_penalty * torch.norm(self.last_layer.weight, p=1)  # Add the l1 penalty also on the weights
-
-            return x, reg_loss
-
-        return x, reg_loss
+        return x
 
 
 class Decoder(nn.Module):
@@ -136,6 +130,14 @@ class Decoder(nn.Module):
         self.fc1 = nn.Linear(latent_dim, input_dim, bias=False)
         self.constraint = constraint
         self.latent_dim = latent_dim
+
+        self.initialize_weights()
+
+    def initialize_weights(self):
+        for module in self.modules():
+            if isinstance(module, nn.Linear):
+                nn.init.uniform_(module.weight, a=0.0, b=1.0)
+                module.weight.data.clamp_(min=0)
 
     def forward(self, x):
         '''
@@ -159,14 +161,8 @@ class Decoder(nn.Module):
             pass # just pretty, does nothings
         else:
             raise ValueError('Constraint not recognized. Choose between pg, abs or identity')
-
-        x = F.softplus(x)
  
         self.fc1.weight.data = nn.Parameter(torch.abs(self.fc1.weight))   
-        
-        # print the size of the weight matrix
-
-        # print("WEIGHT MATRIX SIZE: ", self.fc1.weight.data.size())
 
         return x, self.fc1.weight.data
 
@@ -188,11 +184,12 @@ class HybridAutoencoder(nn.Module):
     # In the paper it is assumed that the regularizer term is always the Minimum Volume Regularizer so we won't use the other regularizers
     # Also, it is assumed for the matrix to be passed as n x 96, so we will transpose the matrix before passing it to the model
 
-    def __init__(self, input_dim : int = 96, l_1 : int = 128, latent_dim : int = 17, refit : bool = False, refit_penalty : float = 1e-3, constraint : str = 'identity'):
+    def __init__(self, input_dim : int = 96, l_1 : int = 128, latent_dim : int = 17, constraint : str = 'identity'):
         super(HybridAutoencoder, self).__init__()
 
-        self.encoder = Encoder(input_dim, l_1, latent_dim, refit, refit_penalty) 
+        self.encoder = Encoder(input_dim, l_1, latent_dim) 
         self.decoder = Decoder(input_dim, latent_dim, constraint)                
+
 
     def forward(self, x):
         '''
@@ -207,14 +204,10 @@ class HybridAutoencoder(nn.Module):
         signature_matrix (torch.Tensor): The signature matrix
         total_loss (float): The total loss of the model (Note, this is to be added to the loss function and is used only during refitting)
         '''
-        exposures, reg_loss_enc = self.encoder(x)
+        exposures = self.encoder(x)
         reconstruction, signature_matrix = self.decoder(exposures)
 
-        total_loss = 0
-        if reg_loss_enc is not None:
-            total_loss += reg_loss_enc
-
-        return reconstruction, exposures, signature_matrix, total_loss
+        return reconstruction, exposures, signature_matrix
 
 
     def assign_decoder_weights(self, weights):
@@ -304,7 +297,7 @@ def train_model_for_extraction(model: HybridAutoencoder,
             batch_X = batch[0]  # Get input batch
             optimizer.zero_grad()
 
-            output, _ , signature_mat, _ = model(batch_X)
+            output, _ , signature_mat = model(batch_X)
 
             
             # print("SIGNATURE MATRIX (DECODER WEIGHTS) SIZE: ", signature_mat.size())
@@ -334,14 +327,14 @@ def train_model_for_extraction(model: HybridAutoencoder,
         # Validation Loss
         model.eval()
         with torch.no_grad():
-            val_output, _ , val_sign, _ = model(X_val_tensor)
+            val_output, _ , val_sign = model(X_val_tensor)
             val_loss = criterion(x=X_val_tensor, x_hat=val_output, decoder_weights=val_sign).item()
         
         val_losses.append(val_loss)  # Store validation loss
 
 
-        if (epoch + 1) % 100 == 0:
-            print(f"Epoch {epoch+1}/{epochs} - Training Loss: {epoch_loss:.6f} - Validation Loss: {val_loss:.6f}")
+        #if (epoch + 1) % 1000 == 0:
+            #print(f"Epoch {epoch+1}/{epochs} - Training Loss: {epoch_loss:.6f} - Validation Loss: {val_loss:.6f}")
 
         # Early Stopping Logic
         if val_loss < best_loss:
@@ -368,13 +361,13 @@ def train_model_for_extraction(model: HybridAutoencoder,
 
     # Compute Error Metric
     with torch.no_grad():
-        E, _ = encoder(X_val_tensor)  # Get encoded features
+        E = encoder(X_val_tensor)  # Get encoded features
         E = E.cpu().detach().numpy()
         S = model.return_decoder_weights()
         S = S.cpu().detach().numpy()
     
 
-    # Reconstruction Error as MSE
-    error = np.mean((X_scaled.values - np.dot(E, S.T))**2)
+    # Reconstruction Error as frobenius norm
+    error = np.linalg.norm(X_scaled.values - np.dot(E, S.T), ord='fro')
 
-    return error, S, E.T, train_losses, val_losses  
+    return error, S, E.T, train_losses, val_losses 

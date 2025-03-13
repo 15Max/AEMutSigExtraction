@@ -57,11 +57,7 @@ class aenmf(torch.nn.Module):
         """
         if signature.shape != (self.input_dim, self.latent_dim):
             raise ValueError(f"Expected signature of shape ({self.input_dim}, {self.latent_dim}), but got {signature.shape}")
-
-
-        print("Encoder weight shape:", self.encoder[0].weight.shape)
-        print("Signature shape:", signature.shape)
-
+        
         with torch.no_grad():
             self.encoder[0].weight.copy_(signature.T)  # Load weights directly
             if encoder_bias is not None:
@@ -121,10 +117,12 @@ def train_aenmf(model, training_data, optimizer, tol = 1e-3, relative_tol = True
         loss.backward()
         optimizer.step()
 
-        # Clamp the weights to non-negative values
-        for module in model.modules():
-            if isinstance(module, nn.Linear):
-                module.weight.data.clamp_(min=0)  # Ensure non-negative weights
+
+        with torch.no_grad():
+            # Clamp the weights to non-negative values
+            for module in model.modules():
+                if isinstance(module, nn.Linear):
+                    module.weight.data.clamp_(min=0)  # Ensure non-negative weights
 
         training_loss.append(loss.item())
 
@@ -136,8 +134,8 @@ def train_aenmf(model, training_data, optimizer, tol = 1e-3, relative_tol = True
                 diff = abs(training_loss[-1] - training_loss[-2])
 
         
-        if(iters % 1000 == 0):
-            print(f"Iteration {iters}: Loss = {loss.item()}")
+        # if(iters % 1000 == 0):
+        #     print(f"Iteration {iters}: Loss = {loss.item()}")
 
         # Go to next iteration
         iters += 1

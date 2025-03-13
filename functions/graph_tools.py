@@ -205,7 +205,7 @@ def plot_cosine_similarity_matrix(all_matches: pd.DataFrame, title : str ="Cosin
 
     ax.legend(
         handles=legend_elements,
-        bbox_to_anchor=(0.6, -0.1),
+        bbox_to_anchor=(0.5, -0.1),
         loc='upper center',
         ncol=legend_colums,  # how many columns to use in the legend
         title="Matched signatures"

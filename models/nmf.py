@@ -39,7 +39,6 @@ def nmf(catalog_matrix : np.ndarray, num_sign : int, tol : float = 1e-6, max_ite
     
     diff = float('inf')
     n_iter = 0
-    early_stop = False
     
     while(diff > tol and n_iter < max_iter):
         n_iter += 1 
@@ -54,8 +53,8 @@ def nmf(catalog_matrix : np.ndarray, num_sign : int, tol : float = 1e-6, max_ite
         diff = abs(losses[-1] - losses[-2])
         
 
-        if n_iter%1000 == 0:
-            print(f"Iteration: {n_iter}, Loss: {losses[-1]}")
+        #if n_iter%1000 == 0:
+            #print(f"Iteration: {n_iter}, Loss: {losses[-1]}")
 
     return S, E, losses
 
@@ -88,7 +87,6 @@ def refit_NMF(catalog_matrix: np.ndarray, signature_matrix: np.ndarray, tol : fl
 
     diff = float('inf')
     n_iter = 0
-    early_stop = False
 
     while(diff > tol and n_iter < max_iter):
         n_iter += 1 
@@ -100,8 +98,8 @@ def refit_NMF(catalog_matrix: np.ndarray, signature_matrix: np.ndarray, tol : fl
 
         diff = abs(losses[-1] - losses[-2])
 
-        if n_iter%1000 == 0:
-            print(f"Iteration: {n_iter}, Loss: {losses[-1]}")
+        # if n_iter%1000 == 0:
+        #     print(f"Iteration: {n_iter}, Loss: {losses[-1]}")
 
     return losses
 
