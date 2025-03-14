@@ -27,32 +27,6 @@ def plot_clusters(reduced_signatures, labels, medoid_indices, LATENT_DIM : int, 
     plt.show()
 
 
-# TODO: finish this function
-def plot_clusters_with_cosmic(reduced_signatures, labels, medoid_indices, matched , cosmic, LATENT_DIM, title = "AENMF Signatures"):
-
-    plt.figure(figsize=(10, 6))
-    # Plot all points colored by cluster
-    for cluster in range(LATENT_DIM):
-        cluster_points = reduced_signatures[labels == cluster]
-        plt.scatter(cluster_points[:, 0], cluster_points[:, 1], label=f"Cluster {cluster}")
-
-    # Highlight medoids
-    medoid_points = reduced_signatures[medoid_indices]
-    plt.scatter(medoid_points[:, 0], medoid_points[:, 1], 
-                color='black', marker='+', s=100, label="Medoids")
-
-    # Add COSMIC signatures
-
-    plt.title(title)
-    plt.xlabel("Principal component 1")
-    plt.ylabel("Principal component 2")
-    plt.legend()
-    plt.gca().set_xticks([])
-    plt.gca().set_yticks([])
-    plt.show()
-
-
-
 def base_plot_signature(array, axs, index, ylim=1):
 
     color = ((0.196,0.714,0.863),)*16 + ((0.102,0.098,0.098),)*16 + ((0.816,0.180,0.192),)*16 + \
