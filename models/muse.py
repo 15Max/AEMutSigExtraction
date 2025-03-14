@@ -67,7 +67,7 @@ class Encoder(nn.Module):
     refit (bool): Whether to use the refitting mechanism (for signature extraction)
     refit_penalty (float): The penalty for the refitting mechanism (for signature extraction)
     '''
-    def __init__(self, input_dim, l_1, latent_dim, weights = 'xavier'):
+    def __init__(self, input_dim, l_1, latent_dim, weights = 'xavier', dropout_rate = 0.2):
         super(Encoder, self).__init__()
     
         self.weights = weights
@@ -75,14 +75,17 @@ class Encoder(nn.Module):
             nn.Linear(input_dim, l_1),      # fc1
             nn.BatchNorm1d(l_1),            # bn1
             nn.ReLU(),                  # activation
+            nn.Dropout(dropout_rate),    # dropout
             
             nn.Linear(l_1, l_1 // 2),       # fc2
             nn.BatchNorm1d(l_1 // 2),       # bn2
             nn.ReLU(),                  # activation
+            nn.Dropout(dropout_rate),    # dropout
             
             nn.Linear(l_1 // 2, l_1 // 4),  # fc3
             nn.BatchNorm1d(l_1 // 4),       # bn3
-            nn.ReLU()                   # activation
+            nn.ReLU(),                   # activation
+            nn.Dropout(dropout_rate),    # dropout
         )
 
         self.last_layer = nn.Linear(l_1 // 4, latent_dim)  # Latent layer
@@ -197,10 +200,10 @@ class HybridAutoencoder(nn.Module):
     # In the paper it is assumed that the regularizer term is always the Minimum Volume Regularizer so we won't use the other regularizers
     # Also, it is assumed for the matrix to be passed as n x 96, so we will transpose the matrix before passing it to the model
 
-    def __init__(self, input_dim : int = 96, l_1 : int = 128, latent_dim : int = 17, weights = 'xavier'):
+    def __init__(self, input_dim : int = 96, l_1 : int = 128, latent_dim : int = 17, weights = 'xavier', dropout_rate = 0.2):
         super(HybridAutoencoder, self).__init__()
 
-        self.encoder = Encoder(input_dim, l_1, latent_dim, weights) 
+        self.encoder = Encoder(input_dim, l_1, latent_dim, weights, dropout_rate = dropout_rate) 
         self.decoder = Decoder(input_dim, latent_dim, weights)                
 
 

@@ -2,6 +2,8 @@ import numpy as np
 import pandas as pd
 from scipy.optimize import linear_sum_assignment
 from sklearn.metrics.pairwise import cosine_similarity
+from sklearn.metrics import silhouette_samples
+from sklearn_extra.cluster import KMedoids
 
 
 def compute_match(Signatures : pd.DataFrame, Signatures_true : pd.DataFrame, index : int) -> pd.DataFrame:
@@ -68,3 +70,53 @@ def compute_all_matches(all_signatures : np.ndarray, cosmic : pd.DataFrame, n_ru
         all_matches = pd.concat([all_matches, match.iloc[:,1:]],  axis=1)
 
     return all_matches
+
+
+def compute_consensus_signatures(df, avg_threshold=0.0, min_threshold=0.0):
+    best_signature_overall = None
+    
+    for k, group in df.groupby("k"):
+        # Stack all muse_signatures for given k
+        all_signatures = np.hstack(group["muse_signatures"].values)  # Shape (features, samples)
+        
+        # Apply K-Medoids clustering
+        pam = KMedoids(n_clusters=k, metric='cosine', random_state=42).fit(all_signatures.T)
+        labels = pam.labels_
+        medoid_indices = pam.medoid_indices_
+        consensus_signatures = all_signatures[:, medoid_indices]
+        
+        # Compute silhouette scores
+        silhouette_scores = silhouette_samples(all_signatures.T, labels, metric='cosine')
+        
+        # Assign each consensus signature to an iteration based on source index
+        for idx, medoid in enumerate(medoid_indices):
+            # Determine the corresponding iteration and muse_error
+            total_samples = 0
+            for _, row in group.iterrows():
+                if total_samples + row["muse_signatures"].shape[1] > medoid:
+                    iteration = row["iteration"]
+                    muse_error = row["muse_error"]
+                    break
+                total_samples += row["muse_signatures"].shape[1]
+            
+            # Compute silhouette scores for medoid
+            medoid_silhouette_scores = silhouette_scores[labels == labels[medoid]]
+            avg_silhouette = np.mean(medoid_silhouette_scores)
+            min_silhouette = np.min(medoid_silhouette_scores)
+            
+            # Prune signatures below threshold
+            if avg_silhouette >= avg_threshold and min_silhouette >= min_threshold:
+                candidate_signature = {
+                    "k": k,
+                    "iteration": iteration,
+                    "muse_error": muse_error,
+                    "consensus_signature": consensus_signatures[:, idx],
+                    "avg_silhouette": avg_silhouette,
+                    "min_silhouette": min_silhouette
+                }
+                
+                # Select the best consensus signature overall based on lowest muse_error
+                if best_signature_overall is None or candidate_signature["muse_error"] < best_signature_overall["muse_error"]:
+                    best_signature_overall = candidate_signature
+    
+    return best_signature_overall
