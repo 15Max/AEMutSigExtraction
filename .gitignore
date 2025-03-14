@@ -2,6 +2,7 @@
 *.pkl 
 *.csv:Zone.Identifier
 *.tsv:Zone.Identifier
+*.pt
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

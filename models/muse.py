@@ -21,9 +21,9 @@ class HybridLoss(nn.Module):
     def __init__(self, beta=0.001):
         super(HybridLoss, self).__init__()
         self.beta = beta
-        self.eps = 1e-6 # Small value for numerical stability (avoid log(0))
+        self.eps = 1e-8 # Small value for numerical stability (avoid log(0))
 
-    def forward(self, x, x_hat, decoder_weights, reg_enc_loss=0):
+    def forward(self, x, x_hat, decoder_weights):
         """
         Method to compute the Hybrid Loss.
 
@@ -44,7 +44,7 @@ class HybridLoss(nn.Module):
         identity = torch.eye(gram_matrix.size(0), device=gram_matrix.device)
         _, log_det_value = torch.slogdet(gram_matrix + identity)  # Use numerically stable determinant
 
-        total_loss = npll_loss + (self.beta * log_det_value) + reg_enc_loss
+        total_loss = npll_loss + (self.beta * log_det_value)
 
         return total_loss
 
@@ -67,34 +67,42 @@ class Encoder(nn.Module):
     refit (bool): Whether to use the refitting mechanism (for signature extraction)
     refit_penalty (float): The penalty for the refitting mechanism (for signature extraction)
     '''
-    def __init__(self, input_dim, l_1, latent_dim):
+    def __init__(self, input_dim, l_1, latent_dim, weights = 'xavier'):
         super(Encoder, self).__init__()
     
-        self.latent_activation =  F.softplus
-
+        self.weights = weights
         self.encoder = nn.Sequential(
             nn.Linear(input_dim, l_1),      # fc1
             nn.BatchNorm1d(l_1),            # bn1
-            nn.Softplus(),                  # activation    
+            nn.ReLU(),                  # activation
             
             nn.Linear(l_1, l_1 // 2),       # fc2
             nn.BatchNorm1d(l_1 // 2),       # bn2
-            nn.Softplus(),                  # activation
+            nn.ReLU(),                  # activation
             
             nn.Linear(l_1 // 2, l_1 // 4),  # fc3
             nn.BatchNorm1d(l_1 // 4),       # bn3
-            nn.Softplus()                   # activation
+            nn.ReLU()                   # activation
         )
 
         self.last_layer = nn.Linear(l_1 // 4, latent_dim)  # Latent layer
-
+        self.latent_activation = nn.Softplus()  # Activation function for latent layer 
         self.initialize_weights()
 
     
     def initialize_weights(self):
-        for module in self.modules():
-            if isinstance(module, nn.Linear):
-                nn.init.uniform_(module.weight, a=0.0, b=1.0)
+        if self.weights == 'xavier':
+            for module in self.modules():
+                if isinstance(module, nn.Linear):
+                    nn.init.xavier_uniform_(module.weight)
+        elif self.weights == 'uniform':
+            for module in self.modules():
+                if isinstance(module, nn.Linear):
+                    nn.init.uniform_(module.weight, a=0.0, b=1.0)
+        elif self.weights == 'he_normal':
+            for module in self.modules():
+                if isinstance(module, nn.Linear):
+                    nn.init.kaiming_normal_(module.weight)
 
     def forward(self, x):
         '''
@@ -105,11 +113,10 @@ class Encoder(nn.Module):
 
         Returns:
         x (torch.Tensor): The output of the model
-        reg_loss (float): The regularization loss (significant only during refitting)
         '''
         x = self.encoder(x)  # Pass through encoder layers
         x = self.last_layer(x)  # Last layer (Linear)
-        x = self.latent_activation(x)  # Activation
+        x = self.latent_activation(x)  # Activation function
 
         return x
 
@@ -122,22 +129,35 @@ class Decoder(nn.Module):
     Parameters:
     input_dim (int): The input dimension of the model (96)
     latent_dim (int): The number of latent features
-    constraint (str): Different activation functions
     '''
-    def __init__(self, input_dim : int,  latent_dim : int, constraint = 'pg'):
-        super(Decoder, self).__init__()
-        
-        self.fc1 = nn.Linear(latent_dim, input_dim, bias=False)
-        self.constraint = constraint
-        self.latent_dim = latent_dim
 
+    def __init__(self, input_dim : int,  latent_dim : int, weights = 'xavier'):
+        super(Decoder, self).__init__()
+
+        self.weights = weights
+        self.input_dim = input_dim
+        self.latent_dim = latent_dim
+        self.activation = nn.Identity()
+
+        self.decoder = nn.Sequential(
+            nn.Linear(latent_dim, input_dim, bias=False),  # Linear layer
+            self.activation
+        )
+        
         self.initialize_weights()
 
+    
     def initialize_weights(self):
-        for module in self.modules():
-            if isinstance(module, nn.Linear):
-                nn.init.uniform_(module.weight, a=0.0, b=1.0)
-                module.weight.data.clamp_(min=0)
+        if self.weights == 'xavier':
+            for module in self.modules():
+                if isinstance(module, nn.Linear):
+                    nn.init.xavier_uniform_(module.weight)
+                    # clamp the weights to be non-negative
+                    module.weight.data.clamp_(min=0)
+        elif self.weights == 'uniform':
+            for module in self.modules():
+                if isinstance(module, nn.Linear):
+                    nn.init.uniform_(module.weight, a=0.0, b=1.0)
 
     def forward(self, x):
         '''
@@ -148,23 +168,20 @@ class Decoder(nn.Module):
 
         Returns:
         x (torch.Tensor): The output of the model
-        self.fc1.weight.data (torch.Tensor): The weight matrix of the model, which is the signature matrix
         '''
-        x = self.fc1(x)  # Linear activation
+        x = self.decoder(x)
 
+        return x
+    
+    def get_weights(self):
+        '''
+        Method to return the weights of the decoder (signature matrix)
 
-        if(self.constraint == 'pg'):
-            x = nn.ReLU(x)
-        elif (self.constraint == 'abs'):
-            x = Abs(x)
-        elif (self.constraint == 'identity'):
-            pass # just pretty, does nothings
-        else:
-            raise ValueError('Constraint not recognized. Choose between pg, abs or identity')
- 
-        self.fc1.weight.data = nn.Parameter(torch.abs(self.fc1.weight))   
-
-        return x, self.fc1.weight.data
+        Returns:
+        self.decoder[0].weight (torch.Tensor): The weights of the decoder
+        '''
+        
+        return self.decoder[0].weight
 
 class HybridAutoencoder(nn.Module):
     '''
@@ -175,20 +192,16 @@ class HybridAutoencoder(nn.Module):
     input_dim (int): The input dimension of the model (96)
     l_1 (int): The number of neurons in the first layer of the encoder
     latent_dim (int): The number of latent features
-    refit (bool): Whether to use the refitting mechanism
-    refit_penalty (float): The penalty for the refitting mechanism
-    constraint (str): The constraint to apply on the decoder weights, can be 'pg', 'abs' or 'identity'
-
     '''
 
     # In the paper it is assumed that the regularizer term is always the Minimum Volume Regularizer so we won't use the other regularizers
     # Also, it is assumed for the matrix to be passed as n x 96, so we will transpose the matrix before passing it to the model
 
-    def __init__(self, input_dim : int = 96, l_1 : int = 128, latent_dim : int = 17, constraint : str = 'identity'):
+    def __init__(self, input_dim : int = 96, l_1 : int = 128, latent_dim : int = 17, weights = 'xavier'):
         super(HybridAutoencoder, self).__init__()
 
-        self.encoder = Encoder(input_dim, l_1, latent_dim) 
-        self.decoder = Decoder(input_dim, latent_dim, constraint)                
+        self.encoder = Encoder(input_dim, l_1, latent_dim, weights) 
+        self.decoder = Decoder(input_dim, latent_dim, weights)                
 
 
     def forward(self, x):
@@ -205,7 +218,8 @@ class HybridAutoencoder(nn.Module):
         total_loss (float): The total loss of the model (Note, this is to be added to the loss function and is used only during refitting)
         '''
         exposures = self.encoder(x)
-        reconstruction, signature_matrix = self.decoder(exposures)
+        reconstruction = self.decoder(exposures)
+        signature_matrix = self.decoder.get_weights()
 
         return reconstruction, exposures, signature_matrix
 
@@ -217,12 +231,6 @@ class HybridAutoencoder(nn.Module):
         self.decoder.fc1.weight.data = weights
 
     
-    def return_decoder_weights(self):
-        '''
-        A method to return the decoder weights (signature matrix) from the model.
-        '''
-        
-        return self.decoder.fc1.weight.data
     
     def return_encoder_model(self):
         '''
@@ -241,7 +249,8 @@ def train_model_for_extraction(model: HybridAutoencoder,
                 batch_size: int,
                 save_to: str,
                 iteration: int,
-                patience: int = 30): 
+                patience: int = 30, 
+                beta = 0.001): 
     '''
     Function to train the Hybrid Autoencoder model.
 
@@ -255,6 +264,7 @@ def train_model_for_extraction(model: HybridAutoencoder,
     save_to (str): The directory to save the model
     iteration (int): The iteration number
     patience (int): The patience for early stopping
+    beta (float): The weight of the regularizer
 
     Returns:
     error (float): The error of the model
@@ -277,7 +287,7 @@ def train_model_for_extraction(model: HybridAutoencoder,
 
     # Move model to device
     model = model.to(device)
-    criterion = HybridLoss(beta=0.001)
+    criterion = HybridLoss(beta=beta)
     optimizer = optim.Adam(model.parameters())
 
     best_loss = float('inf')
@@ -309,9 +319,9 @@ def train_model_for_extraction(model: HybridAutoencoder,
 
             # Enforce non-negativity constraint on weights via clamping
 
-            for module in model.encoder.modules():
-                if isinstance(module, nn.Linear):
-                    module.weight.data.clamp_(min=0) 
+            # for module in model.encoder.modules():
+            #     if isinstance(module, nn.Linear):
+            #         module.weight.data.clamp_(min=0) 
             
             for module in model.decoder.modules():    
                 if isinstance(module, nn.Linear):
@@ -324,12 +334,13 @@ def train_model_for_extraction(model: HybridAutoencoder,
         epoch_loss /= len(train_dataset)  # Compute average epoch loss
         train_losses.append(epoch_loss)  # Store training loss
 
-        # Validation Loss
         model.eval()
         with torch.no_grad():
-            val_output, _ , val_sign = model(X_val_tensor)
-            val_loss = criterion(x=X_val_tensor, x_hat=val_output, decoder_weights=val_sign).item()
-        
+            val_output, _, _= model(X_val_tensor)
+            
+            # Frobenius norm loss
+            val_loss = torch.norm(X_val_tensor - val_output, p='fro').item()
+
         val_losses.append(val_loss)  # Store validation loss
 
 
@@ -363,11 +374,11 @@ def train_model_for_extraction(model: HybridAutoencoder,
     with torch.no_grad():
         E = encoder(X_val_tensor)  # Get encoded features
         E = E.cpu().detach().numpy()
-        S = model.return_decoder_weights()
+        S = model.decoder.get_weights()
         S = S.cpu().detach().numpy()
     
-
+    
     # Reconstruction Error as frobenius norm
-    error = np.linalg.norm(X_scaled.values - np.dot(E, S.T), ord='fro')
+    error = np.linalg.norm(X_scaled.values - np.dot(E, S.T))
 
     return error, S, E.T, train_losses, val_losses 

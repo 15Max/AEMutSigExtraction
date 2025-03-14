@@ -45,3 +45,9 @@ If we have a prior knowledge of the mutational signatures inside the data, and w
 1) Fix the way we compute the test error: for NMF we fix the signature and compute the best exposure. With AENMF? Investigate
 2) Unify muse and denoising
 3) Finish developing the correct training cycle
+4) Check papers in intro of MUSE
+5) Understand which weights initialization should be used in conjunction with the Softplus act
+6) Explain how and why we transposed the input in muse \[ X = m \times n \qquad S = m \times k \quad E = k \times n \to X = SE\]
+\[X^T = n \times m \qquad S^T = k \times m \quad E^T = n \times k  \qquad X^T = E^T S^T\]
+7) Which other activation functions can we use? (encoder only)
+8) Tuning of hyperparams: beta in volume reg
