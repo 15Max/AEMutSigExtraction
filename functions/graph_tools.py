@@ -105,26 +105,42 @@ def plot_cosine_similarity_matrix(all_matches: pd.DataFrame, title : str ="Cosin
     all_similarities = all_matches.iloc[:, 1::2]
 
     # Find the unique signatures
-    unique_signatures = all_signatures.stack().unique()
+    unique_signatures = sorted(all_signatures.stack().unique())
 
     # Custom colormap
-    #custom_colors = ['#1F8F99FF', '#52C4CCFF', '#99FAFFFF',  '#E6FFFFFF','#FFE6CCFF',  '#FF8F33FF', '#CC5800FF', '#994000FF','#B8B69EFF', '#88AB38FF', '#3B7D31FF']
+    #custom_colors = [
 
     # Create a ListedColormap
-    #custom_cmap = ListedColormap(custom_colors)
-    #custom_cmap
+    ##custom_cmap = ListedColormap(custom_colors)
+    #ustom_cmap
     
-    custom_cmap = plt.cm.get_cmap(palette, len(unique_signatures))
+    custom_cmap = plt.cm.get_cmap(palette, 20)
     # Map each signature to an RGBA color
-    sig_to_color = {}
+    sig_to_color = {
+        'SBS3' : custom_cmap(0),
+        'SBS6' :custom_cmap(1),
+        'SBS10a' : custom_cmap(2),
+        'SBS10b' : custom_cmap(3),
+        'SBS10c' : custom_cmap(4),
+        'SBS13' : custom_cmap(5),
+        'SBS40a': custom_cmap(6),
+        'SBS40b' : custom_cmap(7),
+        'SBS40c' : custom_cmap(8),
+        'SBS44' : custom_cmap(9),
+        'SBS52' : custom_cmap(10),
+        'SBS56' : custom_cmap(11),
+        'SBS5' : custom_cmap(12),
+        'SBS12' : custom_cmap(13),
+        'SBS53' : custom_cmap(14),
+        'SBS7' : custom_cmap(15),
+        'SBS15' : custom_cmap(16),
+        'SBS26' : custom_cmap(17),
+        'SBS28' : custom_cmap(18),
+        }
 
+    
 
-
-    for i, sig in enumerate(unique_signatures):
-        rgba = custom_cmap(i)
-        sig_to_color[sig] = rgba
-
-    # Create a color matrix
+   # Create a color matrix
     N, M = all_signatures.shape
     color_matrix = np.zeros((N, M, 4))  # 4 for RGBA
 
@@ -172,10 +188,10 @@ def plot_cosine_similarity_matrix(all_matches: pd.DataFrame, title : str ="Cosin
     ax.set_title(title)
     ax.invert_yaxis()
 
-    legend_elements = []
-    for signature, rgba in sig_to_color.items():
-        patch = Patch(facecolor=rgba, edgecolor='black', label=signature)
-        legend_elements.append(patch)
+    legend_elements = [
+        Patch(facecolor=sig_to_color[sig], edgecolor='black', label=sig)
+        for sig in unique_signatures if sig in sig_to_color
+    ]
 
     ax.legend(
         handles=legend_elements,
