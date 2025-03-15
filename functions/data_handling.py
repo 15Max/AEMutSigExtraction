@@ -31,38 +31,44 @@ def load_preprocess_data(data_path, cosmic_data_path, sep1, sep2, output_folder,
         print("Data already exists in ", os.path.join(output_folder, output_filename))
 
 
-def data_augmentation(X : pd.DataFrame , augmentation : int =5) -> pd.DataFrame:
+
+def data_augmentation(X: pd.DataFrame, augmentation: int = 5) -> pd.DataFrame:
     '''
-    A function to perform data augmentation on the input data. Here X is expected to be a pandas DataFrame that contains
-    the count data, rows represent signatures and columns patients. The data augmentation is performed by bootstrapping
-    the data and then concatenating the bootstrapped data to the original data, obtaining a "stacked" matrix
+    Performs data augmentation by bootstrapping each tumour (column) `augmentation` times using a multinomial 
+    distribution M(N, p), where:
+    - N is the total mutation count for the tumour.
+    - p is the relative frequency of each of the 96 mutational classes.
 
     Parameters:
-    X (pd.DataFrame): The input data to be augmented
-    augmentation (int): The number of times to augment the data
-    returns (pd.DataFrame): The augmented data
+    X (pd.DataFrame): Input count data (96 mutational signatures as rows, patients as columns).
+    augmentation (int): Number of bootstrap samples to generate per tumour.
+
+    Returns:
+    pd.DataFrame: A new DataFrame containing only the augmented data (96 rows × (patients * augmentation) columns).
     '''
 
-    X_augmented=[]
-    
+    augmented_columns = []
+
     for i in range(augmentation):
-        X_bootstrapped=[]
-        for col in X.columns:
-            N = int(round(np.sum(X[col])))
-            p = X[col] / N 
-            X_bootstrapped.append(np.random.multinomial(N, p))
+        X_bootstrapped = X.copy()  # Copy structure
 
-        X_bootstrapped = np.transpose(np.array(X_bootstrapped))
+        for col in X.columns:  # Iterate over patients
+            N = np.sum(X[col])  # Total number of mutations for this patient
+            if N == 0:
+                # If no mutations, return zero vector instead of multinomial sampling
+                X_bootstrapped[col] = np.zeros_like(X[col])
+            else:
+                p = X[col] / np.sum(X[col])  # Properly normalized probabilities
+                X_bootstrapped[col] = np.random.multinomial(N, p)
 
-        # Make sure that the columns have original names: original name + _augmented + i
+        # Rename columns to indicate augmentation round
+        X_bootstrapped.columns = [str(col) + '_aug_' + str(i) for col in X.columns]
+        augmented_columns.append(X_bootstrapped)
 
-        X_bootstrapped = pd.DataFrame(X_bootstrapped, columns=[str(col) + '_aug_' + str(i) for col in X.columns])
-        X_augmented.append(pd.DataFrame(X_bootstrapped, dtype= 'int64'))
+    # Concatenate all augmented versions **horizontally**
+    X_augmented = pd.concat(augmented_columns, axis=1)
 
-    X_aug = pd.concat(X_augmented, axis=1)
-
-    return X_aug
-
+    return X_augmented
 
 
 def data_normalization(X : pd.DataFrame) -> pd.DataFrame:

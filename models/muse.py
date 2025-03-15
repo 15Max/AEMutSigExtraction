@@ -12,8 +12,8 @@ class HybridLoss(nn.Module):
     '''
     Class for the Hybrid Loss function. The Hybrid Loss function is a combination of the Negative Poisson Log-Likelihood
     Loss and the Minimum Volume Regularizer. The Negative Poisson Log-Likelihood Loss is the reconstruction loss of the
-    model (input is count data), while the Minimum Volume Regularizer is a regularizer that enforces the exposure matrix
-    to be sparse (i.e. the latent representation to be sparse therefore "more interpretable").
+    model (input is count data), while the Minimum Volume Regularizer is a regularizer that enforces the signature matrix
+    to be sparse
 
     Parameters:
     beta (float): The weight of the regularizer
@@ -67,25 +67,25 @@ class Encoder(nn.Module):
     refit (bool): Whether to use the refitting mechanism (for signature extraction)
     refit_penalty (float): The penalty for the refitting mechanism (for signature extraction)
     '''
-    def __init__(self, input_dim, l_1, latent_dim, weights = 'xavier', dropout_rate = 0.2):
+    def __init__(self, input_dim, l_1, latent_dim, weights = 'xavier'):
         super(Encoder, self).__init__()
     
         self.weights = weights
         self.encoder = nn.Sequential(
             nn.Linear(input_dim, l_1),      # fc1
             nn.BatchNorm1d(l_1),            # bn1
-            nn.ReLU(),                  # activation
-            nn.Dropout(dropout_rate),    # dropout
+            nn.Softplus(),                  # activation
+
             
             nn.Linear(l_1, l_1 // 2),       # fc2
             nn.BatchNorm1d(l_1 // 2),       # bn2
-            nn.ReLU(),                  # activation
-            nn.Dropout(dropout_rate),    # dropout
+            nn.Softplus(),                  # activation
+
             
             nn.Linear(l_1 // 2, l_1 // 4),  # fc3
             nn.BatchNorm1d(l_1 // 4),       # bn3
-            nn.ReLU(),                   # activation
-            nn.Dropout(dropout_rate),    # dropout
+            nn.Softplus(),                   # activation
+   
         )
 
         self.last_layer = nn.Linear(l_1 // 4, latent_dim)  # Latent layer
@@ -200,10 +200,10 @@ class HybridAutoencoder(nn.Module):
     # In the paper it is assumed that the regularizer term is always the Minimum Volume Regularizer so we won't use the other regularizers
     # Also, it is assumed for the matrix to be passed as n x 96, so we will transpose the matrix before passing it to the model
 
-    def __init__(self, input_dim : int = 96, l_1 : int = 128, latent_dim : int = 17, weights = 'xavier', dropout_rate = 0.2):
+    def __init__(self, input_dim : int = 96, l_1 : int = 128, latent_dim : int = 17, weights = 'xavier'):
         super(HybridAutoencoder, self).__init__()
 
-        self.encoder = Encoder(input_dim, l_1, latent_dim, weights, dropout_rate = dropout_rate) 
+        self.encoder = Encoder(input_dim, l_1, latent_dim, weights) 
         self.decoder = Decoder(input_dim, latent_dim, weights)                
 
 
@@ -253,7 +253,8 @@ def train_model_for_extraction(model: HybridAutoencoder,
                 save_to: str,
                 iteration: int,
                 patience: int = 30, 
-                beta = 0.001): 
+                beta = 0.001,
+                lr = 0.001): 
     '''
     Function to train the Hybrid Autoencoder model.
 
@@ -291,7 +292,7 @@ def train_model_for_extraction(model: HybridAutoencoder,
     # Move model to device
     model = model.to(device)
     criterion = HybridLoss(beta=beta)
-    optimizer = optim.Adam(model.parameters())
+    optimizer = optim.Adam(model.parameters(), lr = lr)
 
     best_loss = float('inf')
     patience_counter = 0
@@ -312,19 +313,9 @@ def train_model_for_extraction(model: HybridAutoencoder,
 
             output, _ , signature_mat = model(batch_X)
 
-            
-            # print("SIGNATURE MATRIX (DECODER WEIGHTS) SIZE: ", signature_mat.size())
-            # print("EXPOSURE MATRIX (LATENT REPR) SIZE: ", exposures_mat.size())
-
             loss = criterion(x=batch_X, x_hat=output, decoder_weights=signature_mat)
             loss.backward()
             optimizer.step()
-
-            # Enforce non-negativity constraint on weights via clamping
-
-            # for module in model.encoder.modules():
-            #     if isinstance(module, nn.Linear):
-            #         module.weight.data.clamp_(min=0) 
             
             for module in model.decoder.modules():    
                 if isinstance(module, nn.Linear):
