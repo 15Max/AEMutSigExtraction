@@ -49,23 +49,24 @@ def compute_match(Signatures : pd.DataFrame, Signatures_true : pd.DataFrame, ind
 
 
 
-def compute_all_matches(all_signatures : np.ndarray, cosmic : pd.DataFrame, n_runs :int, k:int = 4) -> pd.DataFrame:
+def compute_all_matches(all_signatures : np.ndarray, cosmic : pd.DataFrame, k:int = 4) -> pd.DataFrame:
     """
     Compute the cosine similarity between the extracted signatures and the true signatures and return a dataframe with the similarity values.
 
     Parameters:
     all_signatures (np.ndarray): Extracted signatures of shape 96 x k
     cosmic (pd.DataFrame): True signatures
+    k (int): Number of signatures to compare at once
 
     Returns:
     match_df (pd.DataFrame): Dataframe with columns 'Extracted', 'True', and 'Similarity' showing the similarity values between the extracted and true signatures.
     """
     all_matches = pd.DataFrame()
-    for i in range(0, all_signatures.shape[1], n_runs):
+    for i in range(0, all_signatures.shape[1], k):
     
         signature_block = all_signatures[:, i:i+k]
 
-        match, _ = compute_match(signature_block, cosmic, index = i//n_runs)
+        match, _ = compute_match(signature_block, cosmic, index = i//k)
 
         all_matches = pd.concat([all_matches, match.iloc[:,1:]],  axis=1)
 
@@ -131,7 +132,7 @@ def find_best_k(df, avg_threshold=0.0, min_threshold=0.0):
         all_signatures = np.hstack(group["muse_signatures"].values)  # Shape (features, samples)
         
         # Apply K-Medoids clustering
-        pam = KMedoids(n_clusters=k, metric='cosine', random_state=42).fit(all_signatures.T)
+        pam = KMedoids(n_clusters=k, metric='cosine').fit(all_signatures.T)
         labels = pam.labels_
         medoid_indices = pam.medoid_indices_
         

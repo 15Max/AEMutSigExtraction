@@ -134,6 +134,8 @@ def plot_cosine_similarity_matrix(all_matches: pd.DataFrame, title : str ="Cosin
         'SBS44' : custom_cmap(7),
         'SBS52' : custom_cmap(8),
         'SBS57' : custom_cmap(10),
+        'SBS56' : custom_cmap(14),
+        'SBS28' : custom_cmap(15),
         }
     
    # Create a color matrix
@@ -222,6 +224,8 @@ def plot_signature_frequency(all_matches: pd.DataFrame, title: str = "Signature 
         'SBS44' : custom_cmap(7),
         'SBS52' : custom_cmap(8),
         'SBS57' : custom_cmap(10),
+        'SBS56' : custom_cmap(14),
+        'SBS28' : custom_cmap(15),
         }
     # Assign colors based on sig_to_color, fallback to default color if not in dict
     bar_colors = [sig_to_color.get(sig, custom_cmap(2)) for sig in signature_counts.index]
