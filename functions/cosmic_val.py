@@ -49,7 +49,7 @@ def compute_match(Signatures : pd.DataFrame, Signatures_true : pd.DataFrame, ind
 
 
 
-def compute_all_matches(all_signatures : np.ndarray, cosmic : pd.DataFrame, n_runs :int ) -> pd.DataFrame:
+def compute_all_matches(all_signatures : np.ndarray, cosmic : pd.DataFrame, n_runs :int, k:int = 4) -> pd.DataFrame:
     """
     Compute the cosine similarity between the extracted signatures and the true signatures and return a dataframe with the similarity values.
 
@@ -63,7 +63,7 @@ def compute_all_matches(all_signatures : np.ndarray, cosmic : pd.DataFrame, n_ru
     all_matches = pd.DataFrame()
     for i in range(0, all_signatures.shape[1], n_runs):
     
-        signature_block = all_signatures[:, i:i+4]
+        signature_block = all_signatures[:, i:i+k]
 
         match, _ = compute_match(signature_block, cosmic, index = i//n_runs)
 

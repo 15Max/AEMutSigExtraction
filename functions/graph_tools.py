@@ -3,7 +3,8 @@ import numpy as np
 import matplotlib.patches as mpatches
 from matplotlib.patches import Patch
 import pandas as pd
-from matplotlib.colors import ListedColormap
+#from matplotlib.colors import ListedColormap
+import matplotlib.ticker as mticker
 
 
 # Function to plot Kmedoids clusters reduced with PCA
@@ -25,32 +26,6 @@ def plot_clusters(reduced_signatures, labels, medoid_indices, LATENT_DIM : int, 
     plt.ylabel("Principal component 2")
     plt.legend()
     plt.show()
-
-
-# TODO: finish this function
-def plot_clusters_with_cosmic(reduced_signatures, labels, medoid_indices, matched , cosmic, LATENT_DIM, title = "AENMF Signatures"):
-
-    plt.figure(figsize=(10, 6))
-    # Plot all points colored by cluster
-    for cluster in range(LATENT_DIM):
-        cluster_points = reduced_signatures[labels == cluster]
-        plt.scatter(cluster_points[:, 0], cluster_points[:, 1], label=f"Cluster {cluster}")
-
-    # Highlight medoids
-    medoid_points = reduced_signatures[medoid_indices]
-    plt.scatter(medoid_points[:, 0], medoid_points[:, 1], 
-                color='black', marker='+', s=100, label="Medoids")
-
-    # Add COSMIC signatures
-
-    plt.title(title)
-    plt.xlabel("Principal component 1")
-    plt.ylabel("Principal component 2")
-    plt.legend()
-    plt.gca().set_xticks([])
-    plt.gca().set_yticks([])
-    plt.show()
-
 
 
 def base_plot_signature(array, axs, index, ylim=1):
@@ -126,31 +101,42 @@ def plot_signature(signatures, model : str = "Autoencoder"):
 
 
 
-def plot_cosine_similarity_matrix(all_matches: pd.DataFrame, title : str ="Cosine similarity matrix", figsize : tuple =(7, 7), legend_colums : int =4, palette = 'Paired') -> None:
+def plot_cosine_similarity_matrix(all_matches: pd.DataFrame, title : str ="Cosine similarity matrix", figsize : tuple =(7, 7), legend_colums : int =4, palette = 'tab20') -> None:
     all_signatures = all_matches.iloc[:, 0::2]
     all_similarities = all_matches.iloc[:, 1::2]
 
     # Find the unique signatures
-    unique_signatures = all_signatures.stack().unique()
+    unique_signatures = sorted(all_signatures.stack().unique())
 
     # Custom colormap
-    #custom_colors = ['#1F8F99FF', '#52C4CCFF', '#99FAFFFF',  '#E6FFFFFF','#FFE6CCFF',  '#FF8F33FF', '#CC5800FF', '#994000FF','#B8B69EFF', '#88AB38FF', '#3B7D31FF']
+    #custom_colors = [
 
     # Create a ListedColormap
-    #custom_cmap = ListedColormap(custom_colors)
-    #custom_cmap
+    ##custom_cmap = ListedColormap(custom_colors)
+    #ustom_cmap
     
-    custom_cmap = plt.cm.get_cmap(palette, len(unique_signatures))
+    custom_cmap = plt.cm.get_cmap(palette, 20)
     # Map each signature to an RGBA color
-    sig_to_color = {}
-
-
-
-    for i, sig in enumerate(unique_signatures):
-        rgba = custom_cmap(i)
-        sig_to_color[sig] = rgba
-
-    # Create a color matrix
+    sig_to_color = {
+        'SBS1' : custom_cmap(16),
+        'SBS3' : custom_cmap(12),
+        'SBS5' : custom_cmap(11),
+        'SBS6' :custom_cmap(9),
+        'SBS8' : custom_cmap(1),
+        'SBS10a' : custom_cmap(5),
+        'SBS10c' : custom_cmap(3),
+        'SBS12' : custom_cmap(13),
+        'SBS13' : custom_cmap(0),
+        'SBS15' : custom_cmap(2),
+        'SBS26' : custom_cmap(4),
+        'SBS40a': custom_cmap(18),
+        'SBS40c' : custom_cmap(19),
+        'SBS44' : custom_cmap(7),
+        'SBS52' : custom_cmap(8),
+        'SBS57' : custom_cmap(10),
+        }
+    
+   # Create a color matrix
     N, M = all_signatures.shape
     color_matrix = np.zeros((N, M, 4))  # 4 for RGBA
 
@@ -186,10 +172,6 @@ def plot_cosine_similarity_matrix(all_matches: pd.DataFrame, title : str ="Cosin
     ax.set_xticks([])
     ax.set_yticks([])
 
-    # For numbering columns along x-axis
-    #ax.set_xticks(range(M))
-    #ax.set_xticklabels(range(1, M + 1), fontsize=10)
-
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
     ax.spines['left'].set_visible(False)
@@ -198,10 +180,10 @@ def plot_cosine_similarity_matrix(all_matches: pd.DataFrame, title : str ="Cosin
     ax.set_title(title)
     ax.invert_yaxis()
 
-    legend_elements = []
-    for signature, rgba in sig_to_color.items():
-        patch = Patch(facecolor=rgba, edgecolor='black', label=signature)
-        legend_elements.append(patch)
+    legend_elements = [
+        Patch(facecolor=sig_to_color[sig], edgecolor='black', label=sig)
+        for sig in unique_signatures if sig in sig_to_color
+    ]
 
     ax.legend(
         handles=legend_elements,
@@ -211,5 +193,51 @@ def plot_cosine_similarity_matrix(all_matches: pd.DataFrame, title : str ="Cosin
         title="Matched signatures"
     )
 
-    #plt.tight_layout()  
+    plt.show()
+
+
+
+    
+def plot_signature_frequency(all_matches: pd.DataFrame, title: str = "Signature Appearances", figsize: tuple = (12, 7), color: str = 'tab20') -> None:
+    all_signatures = all_matches.iloc[:, 0::2]
+
+    # Count occurrences of each signature across the entire dataset
+    signature_counts = all_signatures.stack().value_counts().sort_values(ascending=False)
+
+    custom_cmap = plt.cm.get_cmap(color, 20)
+    sig_to_color = {
+        'SBS1' : custom_cmap(16),
+        'SBS3' : custom_cmap(12),
+        'SBS5' : custom_cmap(11),
+        'SBS6' :custom_cmap(9),
+        'SBS8' : custom_cmap(1),
+        'SBS10a' : custom_cmap(5),
+        'SBS10c' : custom_cmap(3),
+        'SBS12' : custom_cmap(13),
+        'SBS13' : custom_cmap(0),
+        'SBS15' : custom_cmap(2),
+        'SBS26' : custom_cmap(4),
+        'SBS40a': custom_cmap(18),
+        'SBS40c' : custom_cmap(19),
+        'SBS44' : custom_cmap(7),
+        'SBS52' : custom_cmap(8),
+        'SBS57' : custom_cmap(10),
+        }
+    # Assign colors based on sig_to_color, fallback to default color if not in dict
+    bar_colors = [sig_to_color.get(sig, custom_cmap(2)) for sig in signature_counts.index]
+
+    fig, ax = plt.subplots(figsize=figsize)
+    ax.bar(signature_counts.index, signature_counts.values, color=bar_colors, edgecolor='black', alpha=0.7)
+
+    ax.set_title(title, fontsize=20)
+    ax.set_xlabel("Signatures", fontsize=16)
+    ax.set_ylabel("Number of Occurrences", fontsize=16)
+
+    ax.set_xticks(range(len(signature_counts.index)))
+    ax.set_xticklabels(signature_counts.index, rotation=0, ha='center', fontsize=12)
+
+    ax.yaxis.set_major_locator(mticker.MaxNLocator(integer=True))
+    ax.tick_params(axis='y', labelsize=12)
+
+    plt.tight_layout()
     plt.show()
