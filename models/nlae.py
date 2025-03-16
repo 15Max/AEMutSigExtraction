@@ -340,7 +340,6 @@ def train_model_for_extraction(model: HybridAutoencoder,
 
         #if (epoch + 1) % 1000 == 0:
             #print(f"Epoch {epoch+1}/{epochs} - Training Loss: {epoch_loss:.6f} - Validation Loss: {val_loss:.6f}")
-
         # Early Stopping Logic
         if val_loss < best_loss:
             best_loss = val_loss
