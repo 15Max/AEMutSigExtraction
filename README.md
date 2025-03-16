@@ -47,23 +47,24 @@ A catalog of known mutational sginatures can be found in the [COSMIC database](h
 Signatures can be represented as a matrix factorization problem, where the data matrix, consisting of non-negative counts of mutations in each trinucleotide context, is factorized into two non-negative matrices: the signature matrix and the exposure matrix. 
 Throught this project we want to extract these two lower rank matrices, with a special focus on autoencoders.
 
-TODO: fix this part when we have decided on dataset/data augmetation/synthetic data
+The data we used is from the Genomics England 100,000 Genomes Project(GEL) and is composed of 523 whole genome sequences from ovarian cancer patients.
 
-The data we used is....
+Firstly, as a benchmark, we used NMF to extract the signature and exposure  matrices, this is the most common method used for this task.
 
-Firstly, as a benchmark, we used NMF and convex-NMF to extract the signature and exposure  matrices, these are the most common methods used for this task. 
-Then, we explored the use of autoencoders, starting with a shallow autoencoder with non-negativity constraints.
-Since the activation function is identity, this autoencoder is equivalent to PCA.
-We also imìnvestigated the use of a shallow denoising sparse autoencoder,with non-negativity constraints to ensure the extracted weigths were coherent with the problem at hand. This model should be more robust to noise and overfitting, and provide a more sparse representation of the data.
+Then, we explored the use of autoencoders, starting with a shallow autoencoder with non-negativity constraints. It can be proven that this model is equivalent to Convex NMF, a special case of NMF.
+Since the activation function is identity, this autoencoder is also equivalent to PCA. A dimensionality recduction technique that identifies a set of orthogonal axes, called principal components, that capture the maximum variance in the data.
 
-#TODO : check this part, fix it when decided what to do
-Finally, we implemented a more complex autoencoder, MUSE-XAE, which incorporates bootstrapping, Poisson likelihood in the loss function, early stopping, and k-means to extract the best decoder weights. 
+
+Finally, we implemented a more complex non-linear autoencoder,inspired by the MUSE-XAE architecture. This might be able to identify non-linear relationships between the data that are not captured by NMF.
+Furthermore we consider a loss based on the Poisson distribution, which is more suitable for count data. 
+Also regularization techniques could be employed to encourage the extraction of signatures that aren't overly similar to each other (distinctive features in the latent space).
+Also in this case the number of signatures to be extracted is chosen through a complex selction procedure.
+Finally it's important to note that the input data was augmented through a multinomial bootstrapping procedure, to improve the generalization of the model.
+
 The results should provide insights into the performance of autoencoders compared to the classical NMF methods, and potentially identify non-linear relationships between the data that are not captured by NMF.
 ## Data 
 - Description of the data
-  - GEL / Qualcosa di diverso
-  - Dati sintetici (?), sicuramente in fase di sviluppo
-- Data preprocessing: data loading, augmentation (?), normalization
+  - [GEL Ovary cancer data](data/catalogues_Ovary_SBS.tsv) 523 whole genome sequences
 
 ## [NMF](references/AENMF.pdf) 
 In this first section we will provide a foundation to understand the relationship between non-negative matrix factorization (NMF) and non-negative autoencoders enabling proper interpretation and understanding of autoencoder-based alternatives to NMF. Since its introduction, NMF has been a popular tool for extracting interpretable, low-dimensional representations of high-dimensional data. However, recently, several studies have proposed to replace NMF with autoencoders.We find that the connection between the two models can be established through convex NMF, which is a restricted case of NMF. In particular, convex NMF is a special case of an autoencoder. The performance of NMF and autoencoders is compared within the context of extraction of mutational signatures from cancer genomics data.
@@ -175,7 +176,7 @@ As we can see from this formulations, $(\Diamond)$ and $(\triangle)$ are really 
 
 The linear autoencoder is said to apply PCA to the input data in the sense that its output is a projection of the data onto the low dimensional principal subspace. However, unlike actual PCA, the coordinates of the output of the bottleneck are correlated and are not sorted in descending order of variance. In addition, the solutions for reduction to different dimensions are not nested: when reducing the data from dimension $n$ to dimension $m_1$, the first $m_2$ vectors ($m_2 < m_1$) are not an optimal solution to reduction from dimension $n$ to $m_2$, which therefore requires training an entirely new autoencoder.
 
-## Custom Autoencoder
+## Non-Linear Autoencoder
 
 
 

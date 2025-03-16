@@ -10,4 +10,5 @@ The [`nmf.py`](nmf.py) contains the non-negative matrix factorization implementa
 
 The [`aenmf.py`](aenmf.py) contains the autoencoder non-negative matrix factorization implementation.
 
-### 
+### NLAE
+The [`nlae.py`](nlae.py) contains the MUSE_XAE inspired non-linear autoencoder implementation
