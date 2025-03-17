@@ -64,7 +64,7 @@ Finally it's important to note that the input data was augmented through a multi
 The results should provide insights into the performance of autoencoders compared to the classical NMF methods, and potentially identify non-linear relationships between the data that are not captured by NMF.
 ## Data 
 - Description of the data
-  - [GEL Ovary cancer data](data/catalogues_Ovary_SBS.tsv) 523 whole genome sequences freely available at https://zenodo.org/records/5571551 . 
+  - [GEL Ovary cancer data](data/catalogues_Ovary_SBS.tsv) 523 whole genome sequences freely available on [Zenodo](https://zenodo.org/records/5571551) . 
 
 ## [NMF](references/AENMF.pdf) 
 In this first section we will provide a foundation to understand the relationship between non-negative matrix factorization (NMF) and non-negative autoencoders enabling proper interpretation and understanding of autoencoder-based alternatives to NMF. Since its introduction, NMF has been a popular tool for extracting interpretable, low-dimensional representations of high-dimensional data. However, recently, several studies have proposed to replace NMF with autoencoders.We find that the connection between the two models can be established through convex NMF, which is a restricted case of NMF. In particular, convex NMF is a special case of an autoencoder. The performance of NMF and autoencoders is compared within the context of extraction of mutational signatures from cancer genomics data.
