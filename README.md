@@ -77,12 +77,12 @@ Checkout our brief [presentation](Presentation.pdf) for an overview of the proje
 ## References 
 - [On the Relation Between Autoencoders and Non-negative Matrix
 Factorization, and Their Application for Mutational Signature
-Extraction ; Egendal et al. (2024)](references\AENMF.pdf)
+Extraction ; Egendal et al. (2024)](references/AENMF.pdf)
 - [Decoding whole-genome mutational signatures in 37 human
-pan-cancers by denoising sparse autoencoder neural network; Pei et al. (2020)](references\Denoising.pdf)
+pan-cancers by denoising sparse autoencoder neural network; Pei et al. (2020)](references/Denoising.pdf)
 - [MUSE-XAE: MUtational Signature Extraction with
 eXplainable AutoEncoder enhances tumour types
-classification; Pancotti et al. (2024)](references\MUSE_XAE.pdf)
+classification; Pancotti et al. (2024)](references/MUSE_XAE.pdf)
 
 
 
